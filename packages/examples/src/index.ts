@@ -1,6 +1,7 @@
 import type { DiagramMetadata } from './types.js';
 import flowChart from './examples/flowchart.js';
 import c4 from './examples/c4.js';
+import ishikawaDiagram from './examples/ishikawa.js';
 import kanban from './examples/kanban.js';
 import classDiagram from './examples/class.js';
 import sequenceDiagram from './examples/sequence.js';
@@ -25,6 +26,7 @@ import treemapDiagram from './examples/treemap.js';
 export const diagramData: DiagramMetadata[] = [
   flowChart,
   c4,
+  ishikawaDiagram,
   kanban,
   classDiagram,
   sequenceDiagram,
