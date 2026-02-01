@@ -164,8 +164,8 @@ importers:
         specifier: ^26.1.0
         version: 26.1.0(canvas@3.2.0)
       langium-cli:
-        specifier: 3.3.0
-        version: 3.3.0
+        specifier: ^3.5.0
+        version: 3.5.2
       lint-staged:
         specifier: ^16.1.6
         version: 16.1.6
@@ -536,8 +536,8 @@ importers:
   packages/parser:
     dependencies:
       langium:
-        specifier: 3.3.1
-        version: 3.3.1
+        specifier: ^3.5.0
+        version: 3.5.0
     devDependencies:
       chevrotain:
         specifier: ^11.0.3
@@ -6882,17 +6882,17 @@ packages:
     resolution: {integrity: sha512-X/u76z4JtDVq10u1JA5UQfatPxgPaVDMYTrgHyiTpGN2z4TMEJkIHsoSBBSg9SWZEIXTKsi9kHgiQ9o3Y/4yog==}
     engines: {node: '>=12'}
 
-  langium-cli@3.3.0:
-    resolution: {integrity: sha512-QWvlOYdLbso8/lv6Ma+SBtvMN9k70JrplLx6VSIcV7gJNDTXeS+tjwC/f6T0aco1fg8uLL8GiAcaMovd1FnneA==}
-    engines: {node: '>=16.0.0'}
+  langium-cli@3.5.2:
+    resolution: {integrity: sha512-EVI462CIx8YnJfLSGArvvrlTzAXafA8zNeNbX6FPI5eX8ahicJcvnqW0eAmZ6mLFP7aipzV2F0Sehexe7KHmzA==}
+    engines: {node: '>=18.0.0'}
     hasBin: true
 
-  langium-railroad@3.3.0:
-    resolution: {integrity: sha512-x56CU0KnLoqYLkHEPDJjFoekFoCVbbZbmHduldiXjKD8owt6t5aqgWfg31OeMeR+7XgONZTtmsO76yl6GvEkzQ==}
+  langium-railroad@3.5.0:
+    resolution: {integrity: sha512-80Enc6bOR6oHZD18IQlVTdfCh07rbrM5SOsPUPc1kyh7n3zQbmLs5P2E9hV4SoWlkhOjGKL1I9Z6uORpgy+jTQ==}
 
-  langium@3.3.1:
-    resolution: {integrity: sha512-QJv/h939gDpvT+9SiLVlY7tZC3xB2qK57v0J04Sh9wpMb6MP1q8gB21L3WIo8T5P1MSMg3Ep14L7KkDCFG3y4w==}
-    engines: {node: '>=16.0.0'}
+  langium@3.5.0:
+    resolution: {integrity: sha512-tnqVzWOkUcoiY0bWlyE8diFrZjmGBCF7MesC1bjUaZM+YGQSfdPC+KkhmHM0DWFG+uLcPxidKaPP1SYGtg3J0Q==}
+    engines: {node: '>=18.0.0'}
 
   launch-editor@2.11.1:
     resolution: {integrity: sha512-SEET7oNfgSaB6Ym0jufAdCeo3meJVeCaaDyzRygy0xsp2BFKCprcfHljTq4QkzTLUxEKkFK6OK4811YM2oSrRg==}
@@ -17610,22 +17610,22 @@ snapshots:
 
   ky@0.30.0: {}
 
-  langium-cli@3.3.0:
+  langium-cli@3.5.2:
     dependencies:
       chalk: 5.3.0
       commander: 11.0.0
       fs-extra: 11.1.1
       jsonschema: 1.4.1
-      langium: 3.3.1
-      langium-railroad: 3.3.0
+      langium: 3.5.0
+      langium-railroad: 3.5.0
       lodash: 4.17.21
 
-  langium-railroad@3.3.0:
+  langium-railroad@3.5.0:
     dependencies:
-      langium: 3.3.1
+      langium: 3.5.0
       railroad-diagrams: 1.0.0
 
-  langium@3.3.1:
+  langium@3.5.0:
     dependencies:
       chevrotain: 11.0.3
       chevrotain-allstar: 0.3.1(chevrotain@11.0.3)
