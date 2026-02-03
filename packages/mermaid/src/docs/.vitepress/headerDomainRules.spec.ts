@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-
 import {
   getHeaderLogo,
   getHeaderLogoLink,
@@ -45,7 +44,7 @@ describe('headerDomainRules', () => {
     });
 
     it('returns https://mermaid.ai for other domains', () => {
-      expect(getHeaderLogoLink('mermaid.ai')).toBe('https://mermaid.ai');
+      expect(getHeaderLogoLink('mermaid.ai')).toBe({ link: 'https://mermaid.ai', target: '_self' });
     });
   });
 });
