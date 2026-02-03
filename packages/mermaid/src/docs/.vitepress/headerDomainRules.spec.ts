@@ -4,7 +4,7 @@ import {
   getHeaderLogoLink,
   HOME_NAV_ITEM,
   withConditionalHomeNav,
-} from './headerDomainRules.ts';
+} from './headerDomainRules.js';
 
 describe('headerDomainRules', () => {
   describe('withConditionalHomeNav', () => {
