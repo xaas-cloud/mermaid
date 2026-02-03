@@ -44,7 +44,10 @@ describe('headerDomainRules', () => {
     });
 
     it('returns https://mermaid.ai for other domains', () => {
-      expect(getHeaderLogoLink('mermaid.ai')).toBe({ link: 'https://mermaid.ai', target: '_self' });
+      expect(getHeaderLogoLink('mermaid.ai')).toStrictEqual({
+        link: 'https://mermaid.ai',
+        target: '_self',
+      });
     });
   });
 });
