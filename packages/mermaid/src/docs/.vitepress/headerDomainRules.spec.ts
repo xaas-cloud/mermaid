@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
-
 import {
   getHeaderLogo,
   getHeaderLogoLink,
   HOME_NAV_ITEM,
   withConditionalHomeNav,
-} from './headerDomainRules.ts';
+} from './headerDomainRules.js';
 
 describe('headerDomainRules', () => {
   describe('withConditionalHomeNav', () => {
@@ -45,7 +44,10 @@ describe('headerDomainRules', () => {
     });
 
     it('returns https://mermaid.ai for other domains', () => {
-      expect(getHeaderLogoLink('mermaid.ai')).toBe('https://mermaid.ai');
+      expect(getHeaderLogoLink('mermaid.ai')).toStrictEqual({
+        link: 'https://mermaid.ai',
+        target: '_self',
+      });
     });
   });
 });
