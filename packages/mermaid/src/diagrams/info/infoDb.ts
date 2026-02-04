@@ -1,5 +1,5 @@
 import type { InfoFields, InfoDB } from './infoTypes.js';
-import packageJson from '../../../package.json' assert { type: 'json' };
+import packageJson from '../../../package.json' with { type: 'json' };
 
 export const DEFAULT_INFO_DB: InfoFields = {
   version: packageJson.version + (includeLargeFeatures ? '' : '-tiny'),
