@@ -6,7 +6,7 @@
  * before the treemap keyword, allowing for empty lines and comments before the
  * treemap declaration.
  */
-grammar Treemap
+grammar TreemapGrammar
 
 
 
