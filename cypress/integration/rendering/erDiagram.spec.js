@@ -471,4 +471,17 @@ ORDER ||--|{ LINE-ITEM : contains
       { logLevel: 1, flowchart: { htmlLabels: false } }
     );
   });
+
+  it('should render ER diagram with "1" cardinality alias before relationship operators', () => {
+    imgSnapshotTest(
+      `
+      erDiagram
+        CUSTOMER 1--1 ORDER : "exactly one"
+        ORDER 1--o{ LINE-ITEM : "one to many"
+        PRODUCT 1--|{ CATEGORY : "one or more"
+        USER 1..1 PROFILE : "exactly one optional"
+      `,
+      { logLevel: 1 }
+    );
+  });
 });
