@@ -776,8 +776,8 @@ describe('when parsing ER diagram it...', function () {
     expect(rels.length).toBe(1);
     expect(rels[0].relSpec.cardA).toBe(erDb.Cardinality.ONE_OR_MORE);
     expect(rels[0].relSpec.cardB).toBe(erDb.Cardinality.ONLY_ONE);
-    // "-." is solid-to-dotted, which is IDENTIFYING on the left side
-    expect(rels[0].relSpec.relType).toBe(erDb.Identification.IDENTIFYING);
+    // "-." is solid-to-dotted, which is NON_IDENTIFYING per the grammar
+    expect(rels[0].relSpec.relType).toBe(erDb.Identification.NON_IDENTIFYING);
   });
 
   it('should represent identifying relationships properly', function () {
