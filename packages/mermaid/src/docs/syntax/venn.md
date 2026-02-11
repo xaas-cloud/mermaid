@@ -1,4 +1,4 @@
-# Venn diagrams
+# Venn diagrams (v<MERMAID_RELEASE_VERSION>+)
 
 Venn diagrams show relationships between sets using overlapping circles.
 
