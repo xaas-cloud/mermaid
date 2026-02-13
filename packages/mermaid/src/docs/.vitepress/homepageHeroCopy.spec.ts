@@ -1,0 +1,68 @@
+import { describe, expect, it, vi } from 'vitest';
+
+import { applyHomePageHeroCopy } from './homepageHeroCopy.ts';
+
+describe('homepageHeroCopy', () => {
+  it('does nothing for non-homepage pages', () => {
+    const pageData: any = {
+      relativePath: 'intro/index.md',
+      frontmatter: {
+        hero: {
+          text: 'Diagramming and charting tool',
+          tagline:
+            'JavaScript based diagramming and charting tool that renders Markdown-inspired text definitions to create and modify diagrams dynamically.',
+        },
+      },
+    };
+
+    applyHomePageHeroCopy(pageData, 'mermaid.ai');
+    expect(pageData.frontmatter.hero.text).toBe('Diagramming and charting tool');
+  });
+
+  it('keeps hero copy unchanged on mermaid.js.org', () => {
+    const pageData: any = {
+      relativePath: 'index.md',
+      frontmatter: {
+        hero: {
+          text: 'Diagramming and charting tool',
+          tagline:
+            'JavaScript based diagramming and charting tool that renders Markdown-inspired text definitions to create and modify diagrams dynamically.',
+        },
+      },
+    };
+
+    const logSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+
+    applyHomePageHeroCopy(pageData, 'mermaid.js.org');
+    expect(pageData.frontmatter.hero.text).toBe('Diagramming and charting tool');
+    expect(pageData.frontmatter.hero.tagline).toMatch(/^JavaScript based diagramming/);
+    expect(logSpy).not.toHaveBeenCalled();
+
+    logSpy.mockRestore();
+  });
+
+  it('overrides hero copy on mermaid.ai', () => {
+    const pageData: any = {
+      relativePath: 'index.md',
+      frontmatter: {
+        hero: {
+          text: 'Diagramming and charting tool',
+          tagline:
+            'JavaScript based diagramming and charting tool that renders Markdown-inspired text definitions to create and modify diagrams dynamically.',
+        },
+      },
+    };
+
+    const logSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+
+    applyHomePageHeroCopy(pageData, 'mermaid.ai');
+    expect(pageData.frontmatter.hero.text).not.toBe('Diagramming and charting tool');
+    expect(pageData.frontmatter.hero.tagline).not.toMatch(/^JavaScript based diagramming/);
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/^\[MMD_DOCS_HERO]/),
+      expect.anything()
+    );
+
+    logSpy.mockRestore();
+  });
+});

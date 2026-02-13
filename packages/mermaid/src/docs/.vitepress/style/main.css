@@ -75,3 +75,9 @@ img.resizable-img {
     min-height: unset;
   }
 }
+
+a.link-home {
+  text-decoration: underline;
+  color: var(--vp-c-brand-1);
+  font-size: larger;
+}
