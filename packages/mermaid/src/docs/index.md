@@ -4,11 +4,11 @@ sidebar: false
 
 title: Mermaid
 titleTemplate: Diagramming and charting tool
-
+https://mermaid.ai/?utm_medium=banner_ad&utm_campaign=variant_a&utm_source=mermaid_js
 hero:
-  name: <a href="https://Mermaid.ai/open-source">Mermaid</a>
+  name: <a href="https://Mermaid.ai/open-source?utm_medium=hero&utm_campaign=variant_a&utm_source=mermaid_js">Mermaid</a>
   text: Has a New Home
-  tagline: The Mermaid ecosystem — including the open-source diagramming library and our commercial platform for teams — now lives at <a class="link-home"href="https://Mermaid.ai/open-source">mermaid.ai</a>. This legacy site will remain available.
+  tagline: The Mermaid ecosystem — including the open-source diagramming library and our commercial platform for teams — now lives at <a class="link-home"href="https://Mermaid.ai/open-source?utm_medium=hero&utm_campaign=variant_a&utm_source=mermaid_js">mermaid.ai</a>. This legacy site will remain available.
 
   image:
     light: /hero-chart.svg
