@@ -163,11 +163,12 @@ interface BoneInfo {
 // Flatten children so we can assign Y positions without recursion when drawing.
 // Even depths are placed in pre-order (close to the spine), odd depths in post-order
 // to keep diagonal bones within their parent wedge.
-const flattenTree = (children: IshikawaNode[]) => {
+const flattenTree = (children: IshikawaNode[], direction: 1 | -1) => {
   const entries: LabelEntry[] = [];
   const yOrder: number[] = [];
   const walk = (nodes: IshikawaNode[], pid: number, depth: number) => {
-    for (const child of nodes) {
+    const ordered = direction === -1 ? [...nodes].reverse() : nodes;
+    for (const child of ordered) {
       const idx = entries.length;
       const gc = child.children ?? [];
       entries.push({
@@ -229,7 +230,7 @@ const drawBranch = (
     return;
   }
 
-  const { entries, yOrder } = flattenTree(children);
+  const { entries, yOrder } = flattenTree(children, direction);
   const entryCount = entries.length;
   const ys = new Array<number>(entryCount);
   for (const [slot, entryIdx] of yOrder.entries()) {
