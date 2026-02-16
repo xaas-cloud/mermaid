@@ -22,7 +22,7 @@ describe('radar', () => {
   ])('should handle regular radar', (context: string) => {
     const result = parse(context);
     expectNoErrorsOrAlternatives(result);
-    expect(result.value.$type).toBe(Radar);
+    expect(result.value.$type).toBe(Radar.$type);
   });
 
   describe('should handle title, accDescr, and accTitle', () => {
@@ -32,7 +32,7 @@ describe('radar', () => {
     ])('should handle title', (context: string) => {
       const result = parse(`radar-beta${context}`);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Radar);
+      expect(result.value.$type).toBe(Radar.$type);
 
       const { title } = result.value;
       expect(title).toBe('My Title');
@@ -44,7 +44,7 @@ describe('radar', () => {
     ])('should handle accDescr', (context: string) => {
       const result = parse(`radar-beta${context}`);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Radar);
+      expect(result.value.$type).toBe(Radar.$type);
 
       const { accDescr } = result.value;
       expect(accDescr).toBe('My Accessible Description');
@@ -56,7 +56,7 @@ describe('radar', () => {
     ])('should handle accTitle', (context: string) => {
       const result = parse(`radar-beta${context}`);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Radar);
+      expect(result.value.$type).toBe(Radar.$type);
 
       const { accTitle } = result.value;
       expect(accTitle).toBe('My Accessible Title');
@@ -72,7 +72,7 @@ describe('radar', () => {
     ])('should handle title + accDescr + accTitle', (context: string) => {
       const result = parse(`radar-beta${context}`);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Radar);
+      expect(result.value.$type).toBe(Radar.$type);
 
       const { title, accDescr, accTitle } = result.value;
       expect(title).toBe('My Title');
@@ -87,7 +87,7 @@ describe('radar', () => {
       (context: string) => {
         const result = parse(`radar-beta\n${context}`);
         expectNoErrorsOrAlternatives(result);
-        expect(result.value.$type).toBe(Radar);
+        expect(result.value.$type).toBe(Radar.$type);
 
         const { axes } = result.value;
         expect(axes).toHaveLength(1);
@@ -105,7 +105,7 @@ describe('radar', () => {
     ])('should handle multiple axes', (context: string) => {
       const result = parse(`radar-beta\n${context}`);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Radar);
+      expect(result.value.$type).toBe(Radar.$type);
 
       const { axes } = result.value;
       expect(axes).toHaveLength(2);
@@ -121,7 +121,7 @@ describe('radar', () => {
     ])('should handle axis labels', (context: string) => {
       const result = parse(`radar-beta\n${context}`);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Radar);
+      expect(result.value.$type).toBe(Radar.$type);
 
       const { axes } = result.value;
       expect(axes).toHaveLength(2);
@@ -180,7 +180,7 @@ describe('radar', () => {
     ])('should handle one curve with one entry', (context: string) => {
       const result = parse(`radar-beta\naxis my-axis\n${context}`);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Radar);
+      expect(result.value.$type).toBe(Radar.$type);
 
       const { curves } = result.value;
       expect(curves).toHaveLength(1);
@@ -200,7 +200,7 @@ describe('radar', () => {
     ])('should handle one curve with one detailed entry', (context: string) => {
       const result = parse(`radar-beta\naxis my-axis\n${context}`);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Radar);
+      expect(result.value.$type).toBe(Radar.$type);
 
       const { curves } = result.value;
       expect(curves).toHaveLength(1);
@@ -224,7 +224,7 @@ describe('radar', () => {
     ])('should handle one curve with multiple detailed entries', (context: string) => {
       const result = parse(`radar-beta\naxis ax1, ax1\n${context}`);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Radar);
+      expect(result.value.$type).toBe(Radar.$type);
 
       const { curves } = result.value;
       expect(curves).toHaveLength(1);
@@ -254,7 +254,7 @@ describe('radar', () => {
     ])('should handle multiple curves', (context: string) => {
       const result = parse(`radar-beta\naxis ax1, ax1\n${context}`);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Radar);
+      expect(result.value.$type).toBe(Radar.$type);
 
       const { curves } = result.value;
       expect(curves).toHaveLength(2);
@@ -294,7 +294,7 @@ describe('radar', () => {
       curve c1 { ax1 1, ax2 2 }
       ${context}`);
         expectNoErrorsOrAlternatives(result);
-        expect(result.value.$type).toBe(Radar);
+        expect(result.value.$type).toBe(Radar.$type);
 
         const { options } = result.value;
         expect(options).toBeDefined();
@@ -312,7 +312,7 @@ describe('radar', () => {
       curve c1 { ax1 1, ax2 2 }
       ${context}`);
         expectNoErrorsOrAlternatives(result);
-        expect(result.value.$type).toBe(Radar);
+        expect(result.value.$type).toBe(Radar.$type);
 
         const { options } = result.value;
         expect(options).toBeDefined();
@@ -330,7 +330,7 @@ describe('radar', () => {
       curve c1 { ax1 1, ax2 2 }
       ${context}`);
         expectNoErrorsOrAlternatives(result);
-        expect(result.value.$type).toBe(Radar);
+        expect(result.value.$type).toBe(Radar.$type);
 
         const { options } = result.value;
         expect(options).toBeDefined();

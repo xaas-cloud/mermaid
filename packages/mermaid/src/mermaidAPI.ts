@@ -7,7 +7,7 @@ import { select } from 'd3';
 import { compile, serialize, stringify } from 'stylis';
 import DOMPurify from 'dompurify';
 import isEmpty from 'lodash-es/isEmpty.js';
-import packageJson from '../package.json' assert { type: 'json' };
+import packageJson from '../package.json' with { type: 'json' };
 import { addSVGa11yTitleDescription, setA11yDiagramInfo } from './accessibility.js';
 import assignWithDepth from './assignWithDepth.js';
 import * as configApi from './config.js';

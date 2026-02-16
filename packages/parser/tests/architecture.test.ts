@@ -15,7 +15,7 @@ describe('architecture', () => {
     ])('should handle regular architecture', (context: string) => {
       const result = parse(context);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Architecture);
+      expect(result.value.$type).toBe(Architecture.$type);
     });
   });
 
@@ -30,7 +30,7 @@ describe('architecture', () => {
     ])('should handle regular architecture + title in same line', (context: string) => {
       const result = parse(context);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Architecture);
+      expect(result.value.$type).toBe(Architecture.$type);
 
       const { title } = result.value;
       expect(title).toBe('sample title');
@@ -45,7 +45,7 @@ describe('architecture', () => {
     ])('should handle regular architecture + title in next line', (context: string) => {
       const result = parse(context);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Architecture);
+      expect(result.value.$type).toBe(Architecture.$type);
 
       const { title } = result.value;
       expect(title).toBe('sample title');
@@ -59,7 +59,7 @@ describe('architecture', () => {
             `;
       const result = parse(context);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Architecture);
+      expect(result.value.$type).toBe(Architecture.$type);
 
       const { title, accTitle, accDescr } = result.value;
       expect(title).toBe('sample title');
@@ -77,7 +77,7 @@ describe('architecture', () => {
             `;
       const result = parse(context);
       expectNoErrorsOrAlternatives(result);
-      expect(result.value.$type).toBe(Architecture);
+      expect(result.value.$type).toBe(Architecture.$type);
 
       const { title, accTitle, accDescr } = result.value;
       expect(title).toBe('sample title');
