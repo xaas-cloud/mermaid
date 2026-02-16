@@ -4,7 +4,6 @@ sidebar: false
 
 title: Mermaid
 titleTemplate: Diagramming and charting tool
-https://mermaid.ai/?utm_medium=banner_ad&utm_campaign=variant_a&utm_source=mermaid_js
 hero:
   name: <a href="https://Mermaid.ai/open-source?utm_medium=hero&utm_campaign=variant_a&utm_source=mermaid_js">Mermaid</a>
   text: Has a New Home

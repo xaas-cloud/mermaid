@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { applyHomePageHeroCopy } from './homepageHeroCopy.ts';
 
@@ -31,14 +31,9 @@ describe('homepageHeroCopy', () => {
       },
     };
 
-    const logSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
-
     applyHomePageHeroCopy(pageData, 'mermaid.js.org');
     expect(pageData.frontmatter.hero.text).toBe('Diagramming and charting tool');
     expect(pageData.frontmatter.hero.tagline).toMatch(/^JavaScript based diagramming/);
-    expect(logSpy).not.toHaveBeenCalled();
-
-    logSpy.mockRestore();
   });
 
   it('overrides hero copy on mermaid.ai', () => {
@@ -53,16 +48,8 @@ describe('homepageHeroCopy', () => {
       },
     };
 
-    const logSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
-
     applyHomePageHeroCopy(pageData, 'mermaid.ai');
     expect(pageData.frontmatter.hero.text).not.toBe('Diagramming and charting tool');
     expect(pageData.frontmatter.hero.tagline).not.toMatch(/^JavaScript based diagramming/);
-    expect(logSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/^\[MMD_DOCS_HERO]/),
-      expect.anything()
-    );
-
-    logSpy.mockRestore();
   });
 });

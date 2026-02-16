@@ -1,5 +1,7 @@
 import { isMermaidJsOrgHostname } from './headerDomainRules.js';
 
+import { log } from '../../logger.js';
+
 const LOG_PREFIX = '[MMD_DOCS_HERO]';
 
 /**
@@ -24,9 +26,10 @@ export function applyHomePageHeroCopy(pageData: any, hostname: string): void {
   const before = { text: hero.text, tagline: hero.tagline };
 
   // Placeholder copy for mermaid.ai builds (can be refined later)
+  hero.name = 'Mermaid';
   hero.text = 'Starts Here';
   hero.tagline =
     'The home of Mermaid - the open-source diagramming library and, the collaborative platform built on top of it. Docs, live editor, integrations, and team features — all in one place.';
 
-  // console.info(LOG_PREFIX, { hostname, before, after: { text: hero.text, tagline: hero.tagline } });
+  log.info(LOG_PREFIX, { hostname, before, after: { text: hero.text, tagline: hero.tagline } });
 }
