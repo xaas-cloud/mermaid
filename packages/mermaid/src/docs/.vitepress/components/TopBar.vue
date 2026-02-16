@@ -6,23 +6,15 @@ interface Taglines {
   label: string;
   campaign: string;
   button: string;
+  params?: Record<string, string>;
 }
 
 const taglines: Taglines[] = [
   {
-    label: 'Use code NEWYEAR for 10% off Mermaid Advanced Editor (limited time)',
-    campaign: 'variant_a',
-    button: 'Try now',
-  },
-  {
     label: 'Limited time: 10% off Mermaid Advanced Editor with code NEWYEAR',
-    campaign: 'variant_b',
+    campaign: 'newyear',
     button: 'Claim Discount',
-  },
-  {
-    label: 'Try Mermaid Advanced Editor — get 10% off with code NEWYEAR',
-    campaign: 'variant_c',
-    button: 'Get started',
+    params: { coupon: 'dmIuNbqx' },
   },
 ];
 
@@ -42,8 +34,9 @@ const currentUrl = computed(() => {
     utm_medium: 'banner_ad',
     utm_campaign: taglines[index.value].campaign,
     utm_source: isMermaidAi ? 'ai_open_source' : 'mermaid_js',
+    ...taglines[index.value].params,
   });
-  return `https://mermaid.ai/?${params.toString()}`;
+  return `https://mermaid.ai/app/user/billing/checkout?${params.toString()}`;
 });
 
 onMounted(() => {
