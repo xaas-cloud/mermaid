@@ -1,5 +1,12 @@
 # mermaid
 
+## 11.12.3
+
+### Patch Changes
+
+- Updated dependencies [[`7243340`](https://github.com/mermaid-js/mermaid/commit/72433401a8c9d90d6753b7592d556122ecb953ca)]:
+  - @mermaid-js/parser@1.0.0
+
 ## 11.12.2
 
 ### Patch Changes
