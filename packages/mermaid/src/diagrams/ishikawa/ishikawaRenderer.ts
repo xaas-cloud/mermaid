@@ -7,6 +7,14 @@ import { setupGraphViewbox } from '../../setupGraphViewbox.js';
 import { parseFontSize } from '../../utils.js';
 import type { IshikawaDB } from './ishikawaDb.js';
 import type { IshikawaNode } from './ishikawaTypes.js';
+import rough from 'roughjs';
+
+interface RoughContext {
+  roughSvg: ReturnType<typeof rough.svg>;
+  seed: number;
+  lineColor: string;
+  fillColor: string;
+}
 
 const config = getConfig();
 const FONT_SIZE = parseFontSize(config.fontSize)[0] ?? 14;
@@ -25,31 +33,54 @@ const draw: DrawDefinition = (_text, id, _version, diagram: Diagram) => {
     return;
   }
 
+  const { look, handDrawnSeed, themeVariables } = getConfig();
+  const isHandDrawn = look === 'handDrawn';
+
   const causes = root.children ?? [];
   const padding = config.ishikawa?.diagramPadding ?? 0;
   const maxWidth = config.ishikawa?.useMaxWidth;
   const svg = selectSvgElement(id);
   const g = svg.append('g').attr('class', 'ishikawa');
+
+  const roughSvg = isHandDrawn ? rough.svg(svg.node()!) : undefined;
+  const roughContext: RoughContext | undefined = roughSvg
+    ? {
+        roughSvg,
+        seed: handDrawnSeed ?? 0,
+        lineColor: themeVariables?.lineColor ?? '#333',
+        fillColor: themeVariables?.mainBkg ?? '#fff',
+      }
+    : undefined;
+
   const markerId = `ishikawa-arrow-${id}`;
-  g.append('defs')
-    .append('marker')
-    .attr('id', markerId)
-    .attr('viewBox', '0 0 10 10')
-    .attr('refX', 0)
-    .attr('refY', 5)
-    .attr('markerWidth', 6)
-    .attr('markerHeight', 6)
-    .attr('orient', 'auto')
-    .append('path')
-    .attr('d', 'M 10 0 L 0 5 L 10 10 Z')
-    .attr('class', 'ishikawa-arrow');
+  if (!isHandDrawn) {
+    g.append('defs')
+      .append('marker')
+      .attr('id', markerId)
+      .attr('viewBox', '0 0 10 10')
+      .attr('refX', 0)
+      .attr('refY', 5)
+      .attr('markerWidth', 6)
+      .attr('markerHeight', 6)
+      .attr('orient', 'auto')
+      .append('path')
+      .attr('d', 'M 10 0 L 0 5 L 10 10 Z')
+      .attr('class', 'ishikawa-arrow');
+  }
 
   let spineX = 0;
   let spineY = SPINE_BASE_LENGTH;
-  const spineLine = drawLine(g, spineX, spineY, spineX, spineY, 'ishikawa-spine');
-  drawHead(g, spineX, spineY, root.text);
+
+  // For handDrawn, defer spine drawing until coordinates are final
+  const spineLine = isHandDrawn
+    ? undefined
+    : drawLine(g, spineX, spineY, spineX, spineY, 'ishikawa-spine');
+  drawHead(g, spineX, spineY, root.text, roughContext);
 
   if (!causes.length) {
+    if (isHandDrawn) {
+      drawLine(g, spineX, spineY, spineX, spineY, 'ishikawa-spine', roughContext);
+    }
     setupGraphViewbox(g, svg, padding, maxWidth);
     return;
   }
@@ -77,7 +108,9 @@ const draw: DrawDefinition = (_text, id, _version, diagram: Diagram) => {
   lowerLen = Math.max(lowerLen, lowerStats.max * minSpacing);
 
   spineY = Math.max(upperLen, SPINE_BASE_LENGTH);
-  spineLine.attr('y1', spineY).attr('y2', spineY);
+  if (spineLine) {
+    spineLine.attr('y1', spineY).attr('y2', spineY);
+  }
   g.select('.ishikawa-head-group').attr('transform', `translate(0,${spineY})`);
 
   const pairCount = Math.ceil(causes.length / 2);
@@ -88,7 +121,7 @@ const draw: DrawDefinition = (_text, id, _version, diagram: Diagram) => {
       [causes[p * 2 + 1], 1, lowerLen] as const,
     ]) {
       if (cause) {
-        drawBranch(pg, cause, spineX, spineY, dir, len);
+        drawBranch(pg, cause, spineX, spineY, dir, len, roughContext);
       }
     }
     spineX = pg
@@ -97,9 +130,13 @@ const draw: DrawDefinition = (_text, id, _version, diagram: Diagram) => {
       .reduce((left, n) => Math.min(left, (n as SVGGraphicsElement).getBBox().x), Infinity);
   }
 
-  spineLine.attr('x1', spineX);
-  const markerUrl = `url(#${markerId})`;
-  g.selectAll('line.ishikawa-branch, line.ishikawa-sub-branch').attr('marker-start', markerUrl);
+  if (isHandDrawn) {
+    drawLine(g, spineX, spineY, 0, spineY, 'ishikawa-spine', roughContext);
+  } else {
+    spineLine!.attr('x1', spineX);
+    const markerUrl = `url(#${markerId})`;
+    g.selectAll('line.ishikawa-branch, line.ishikawa-sub-branch').attr('marker-start', markerUrl);
+  }
   setupGraphViewbox(g, svg, padding, maxWidth);
 };
 
@@ -118,7 +155,13 @@ const sideStats = (nodes: IshikawaNode[]) => {
   );
 };
 
-const drawHead = (svg: SVGGroup, x: number, y: number, label: string): void => {
+const drawHead = (
+  svg: SVGGroup,
+  x: number,
+  y: number,
+  label: string,
+  roughContext?: RoughContext
+): void => {
   const maxChars = Math.max(6, Math.floor(110 / (FONT_SIZE * 0.6)));
   const headGroup = svg
     .append('g')
@@ -137,10 +180,22 @@ const drawHead = (svg: SVGGroup, x: number, y: number, label: string): void => {
   const w = Math.max(60, tb.width + 6);
   const h = Math.max(40, tb.height * 2 + 40);
 
-  headGroup
-    .insert('path', ':first-child')
-    .attr('class', 'ishikawa-head')
-    .attr('d', `M 0 ${-h / 2} L 0 ${h / 2} Q ${w * 2.4} 0 0 ${-h / 2} Z`);
+  const headPath = `M 0 ${-h / 2} L 0 ${h / 2} Q ${w * 2.4} 0 0 ${-h / 2} Z`;
+  if (roughContext) {
+    const roughNode = roughContext.roughSvg.path(headPath, {
+      roughness: 1.5,
+      seed: roughContext.seed,
+      fill: roughContext.fillColor,
+      fillStyle: 'hachure',
+      fillWeight: 2.5,
+      hachureGap: 5,
+      stroke: roughContext.lineColor,
+      strokeWidth: 2,
+    });
+    headGroup.insert(() => roughNode, ':first-child').attr('class', 'ishikawa-head');
+  } else {
+    headGroup.insert('path', ':first-child').attr('class', 'ishikawa-head').attr('d', headPath);
+  }
   textEl.attr('transform', `translate(${(w - tb.width) / 2 - tb.x + 3},${-tb.y - tb.height / 2})`);
 };
 
@@ -196,16 +251,75 @@ const flattenTree = (children: IshikawaNode[], direction: 1 | -1) => {
   return { entries, yOrder };
 };
 
-const drawCauseLabel = (svg: SVGGroup, text: string, x: number, y: number, direction: 1 | -1) => {
+const drawCauseLabel = (
+  svg: SVGGroup,
+  text: string,
+  x: number,
+  y: number,
+  direction: 1 | -1,
+  roughContext?: RoughContext
+) => {
   const lg = svg.append('g').attr('class', 'ishikawa-label-group');
   const lt = drawMultilineText(lg, text, x, y + 11 * direction, 'ishikawa-label cause', 'middle');
   const tb = lt.node()!.getBBox();
-  lg.insert('rect', ':first-child')
-    .attr('class', 'ishikawa-label-box')
-    .attr('x', tb.x - 20)
-    .attr('y', tb.y - 2)
-    .attr('width', tb.width + 40)
-    .attr('height', tb.height + 4);
+  if (roughContext) {
+    const roughNode = roughContext.roughSvg.rectangle(
+      tb.x - 20,
+      tb.y - 2,
+      tb.width + 40,
+      tb.height + 4,
+      {
+        roughness: 1.5,
+        seed: roughContext.seed,
+        fill: roughContext.fillColor,
+        fillStyle: 'hachure',
+        fillWeight: 2.5,
+        hachureGap: 5,
+        stroke: roughContext.lineColor,
+        strokeWidth: 2,
+      }
+    );
+    lg.insert(() => roughNode, ':first-child').attr('class', 'ishikawa-label-box');
+  } else {
+    lg.insert('rect', ':first-child')
+      .attr('class', 'ishikawa-label-box')
+      .attr('x', tb.x - 20)
+      .attr('y', tb.y - 2)
+      .attr('width', tb.width + 40)
+      .attr('height', tb.height + 4);
+  }
+};
+
+// Emulate arrow marker since rough.js does not support marker on line
+const drawArrowMarker = (
+  g: SVGGroup,
+  x: number,
+  y: number,
+  dx: number,
+  dy: number,
+  roughContext: RoughContext
+) => {
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len === 0) {
+    return;
+  }
+  const ux = dx / len;
+  const uy = dy / len;
+  const s = 6;
+  const px = -uy * s;
+  const py = ux * s;
+  const tipX = x;
+  const tipY = y;
+  const d = `M ${tipX} ${tipY} L ${tipX - ux * s * 2 + px} ${tipY - uy * s * 2 + py} L ${tipX - ux * s * 2 - px} ${tipY - uy * s * 2 - py} Z`;
+  const roughNode = roughContext.roughSvg.path(d, {
+    roughness: 1,
+    seed: roughContext.seed,
+    fill: roughContext.lineColor,
+    fillStyle: 'solid',
+    stroke: roughContext.lineColor,
+    strokeWidth: 1,
+  });
+  g.append(() => roughNode);
 };
 
 const drawBranch = (
@@ -214,7 +328,8 @@ const drawBranch = (
   startX: number,
   startY: number,
   direction: 1 | -1,
-  length: number
+  length: number,
+  roughContext?: RoughContext
 ): void => {
   const children = node.children ?? [];
   const lineLen = length * (children.length ? 1 : 0.2);
@@ -223,8 +338,11 @@ const drawBranch = (
   const endX = startX + dx;
   const endY = startY + dy;
 
-  drawLine(svg, startX, startY, endX, endY, 'ishikawa-branch');
-  drawCauseLabel(svg, node.text, endX, endY, direction);
+  drawLine(svg, startX, startY, endX, endY, 'ishikawa-branch', roughContext);
+  if (roughContext) {
+    drawArrowMarker(svg, startX, startY, startX - endX, startY - endY, roughContext);
+  }
+  drawCauseLabel(svg, node.text, endX, endY, direction, roughContext);
 
   if (!children.length) {
     return;
@@ -266,7 +384,10 @@ const drawBranch = (
       bx0 = lerp(par.x0, par.x1, dyP ? (y - par.y0) / dyP : 0.5);
       by0 = y;
       bx1 = bx0 - (e.childCount > 0 ? BONE_BASE + e.childCount * BONE_PER_CHILD : BONE_STUB);
-      drawLine(grp, bx0, y, bx1, y, 'ishikawa-sub-branch');
+      drawLine(grp, bx0, y, bx1, y, 'ishikawa-sub-branch', roughContext);
+      if (roughContext) {
+        drawArrowMarker(grp, bx0, y, 1, 0, roughContext);
+      }
       drawMultilineText(grp, e.text, bx1, y, 'ishikawa-label align', 'end');
     } else {
       // Diagonal bone: start from evenly-spaced point on parent's horizontal, angle toward target Y
@@ -274,7 +395,10 @@ const drawBranch = (
       bx0 = lerp(par.x0, par.x1, (par.childCount - k) / (par.childCount + 1));
       by0 = par.y0;
       bx1 = bx0 + diagonalX * ((y - by0) / diagonalY);
-      drawLine(grp, bx0, by0, bx1, y, 'ishikawa-sub-branch');
+      drawLine(grp, bx0, by0, bx1, y, 'ishikawa-sub-branch', roughContext);
+      if (roughContext) {
+        drawArrowMarker(grp, bx0, by0, bx0 - bx1, by0 - y, roughContext);
+      }
       drawMultilineText(grp, e.text, bx1, y, oddLabel, 'end');
     }
 
@@ -336,7 +460,32 @@ const drawMultilineText = (
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-const drawLine = (g: SVGGroup, x1: number, y1: number, x2: number, y2: number, cls: string) =>
-  g.append('line').attr('class', cls).attr('x1', x1).attr('y1', y1).attr('x2', x2).attr('y2', y2);
+const drawLine = (
+  g: SVGGroup,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  cls: string,
+  roughContext?: RoughContext
+) => {
+  if (roughContext) {
+    const roughNode = roughContext.roughSvg.line(x1, y1, x2, y2, {
+      roughness: 1.5,
+      seed: roughContext.seed,
+      stroke: roughContext.lineColor,
+      strokeWidth: 2,
+    });
+    g.append(() => roughNode).attr('class', cls);
+    return undefined;
+  }
+  return g
+    .append('line')
+    .attr('class', cls)
+    .attr('x1', x1)
+    .attr('y1', y1)
+    .attr('x2', x2)
+    .attr('y2', y2);
+};
 
 export const renderer: DiagramRenderer = { draw };
