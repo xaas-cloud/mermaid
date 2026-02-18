@@ -1,9 +1,9 @@
 // cspell:ignore lerp
 import type { Diagram } from '../../Diagram.js';
 import { getConfig } from '../../diagram-api/diagramAPI.js';
-import type { DiagramRenderer, DrawDefinition, SVGGroup } from '../../diagram-api/types.js';
+import type { DiagramRenderer, DrawDefinition, SVG, SVGGroup } from '../../diagram-api/types.js';
 import { selectSvgElement } from '../../rendering-util/selectSvgElement.js';
-import { setupGraphViewbox } from '../../setupGraphViewbox.js';
+import { configureSvgSize } from '../../setupGraphViewbox.js';
 import { parseFontSize } from '../../utils.js';
 import type { IshikawaDB } from './ishikawaDb.js';
 import type { IshikawaNode } from './ishikawaTypes.js';
@@ -16,8 +16,7 @@ interface RoughContext {
   fillColor: string;
 }
 
-const config = getConfig();
-const FONT_SIZE = parseFontSize(config.fontSize)[0] ?? 14;
+const FONT_SIZE_DEFAULT = 14;
 const SPINE_BASE_LENGTH = 250;
 const BONE_STUB = 30;
 const BONE_BASE = 60;
@@ -26,6 +25,14 @@ const ANGLE = (82 * Math.PI) / 180;
 const COS_A = Math.cos(ANGLE);
 const SIN_A = Math.sin(ANGLE);
 
+const applyPaddedViewBox = (svgEl: SVG, pad: number, maxW: boolean) => {
+  const bbox = svgEl.node()!.getBBox();
+  const w = bbox.width + pad * 2;
+  const h = bbox.height + pad * 2;
+  configureSvgSize(svgEl, h, w, maxW);
+  svgEl.attr('viewBox', `${bbox.x - pad} ${bbox.y - pad} ${w} ${h}`);
+};
+
 const draw: DrawDefinition = (_text, id, _version, diagram: Diagram) => {
   const db = diagram.db as IshikawaDB;
   const root = db.getRoot();
@@ -33,12 +40,14 @@ const draw: DrawDefinition = (_text, id, _version, diagram: Diagram) => {
     return;
   }
 
-  const { look, handDrawnSeed, themeVariables } = getConfig();
+  const drawConfig = getConfig();
+  const { look, handDrawnSeed, themeVariables } = drawConfig;
+  const fontSize = parseFontSize(drawConfig.fontSize)[0] ?? FONT_SIZE_DEFAULT;
   const isHandDrawn = look === 'handDrawn';
 
   const causes = root.children ?? [];
-  const padding = config.ishikawa?.diagramPadding ?? 0;
-  const maxWidth = config.ishikawa?.useMaxWidth;
+  const padding = drawConfig.ishikawa?.diagramPadding ?? 20;
+  const useMaxWidth = drawConfig.ishikawa?.useMaxWidth ?? false;
   const svg = selectSvgElement(id);
   const g = svg.append('g').attr('class', 'ishikawa');
 
@@ -75,13 +84,13 @@ const draw: DrawDefinition = (_text, id, _version, diagram: Diagram) => {
   const spineLine = isHandDrawn
     ? undefined
     : drawLine(g, spineX, spineY, spineX, spineY, 'ishikawa-spine');
-  drawHead(g, spineX, spineY, root.text, roughContext);
+  drawHead(g, spineX, spineY, root.text, fontSize, roughContext);
 
   if (!causes.length) {
     if (isHandDrawn) {
       drawLine(g, spineX, spineY, spineX, spineY, 'ishikawa-spine', roughContext);
     }
-    setupGraphViewbox(g, svg, padding, maxWidth);
+    applyPaddedViewBox(svg, padding, useMaxWidth);
     return;
   }
 
@@ -103,7 +112,7 @@ const draw: DrawDefinition = (_text, id, _version, diagram: Diagram) => {
     lowerLen = Math.max(minLen, pool * (lowerStats.total / descendantTotal));
   }
 
-  const minSpacing = FONT_SIZE * 2;
+  const minSpacing = fontSize * 2;
   upperLen = Math.max(upperLen, upperStats.max * minSpacing);
   lowerLen = Math.max(lowerLen, lowerStats.max * minSpacing);
 
@@ -121,7 +130,7 @@ const draw: DrawDefinition = (_text, id, _version, diagram: Diagram) => {
       [causes[p * 2 + 1], 1, lowerLen] as const,
     ]) {
       if (cause) {
-        drawBranch(pg, cause, spineX, spineY, dir, len, roughContext);
+        drawBranch(pg, cause, spineX, spineY, dir, len, fontSize, roughContext);
       }
     }
     spineX = pg
@@ -137,7 +146,7 @@ const draw: DrawDefinition = (_text, id, _version, diagram: Diagram) => {
     const markerUrl = `url(#${markerId})`;
     g.selectAll('line.ishikawa-branch, line.ishikawa-sub-branch').attr('marker-start', markerUrl);
   }
-  setupGraphViewbox(g, svg, padding, maxWidth);
+  applyPaddedViewBox(svg, padding, useMaxWidth);
 };
 
 const sideStats = (nodes: IshikawaNode[]) => {
@@ -160,9 +169,10 @@ const drawHead = (
   x: number,
   y: number,
   label: string,
+  fontSize: number,
   roughContext?: RoughContext
 ): void => {
-  const maxChars = Math.max(6, Math.floor(110 / (FONT_SIZE * 0.6)));
+  const maxChars = Math.max(6, Math.floor(110 / (fontSize * 0.6)));
   const headGroup = svg
     .append('g')
     .attr('class', 'ishikawa-head-group')
@@ -174,7 +184,8 @@ const drawHead = (
     0,
     0,
     'ishikawa-head-label',
-    'start'
+    'start',
+    fontSize
   );
   const tb = textEl.node()!.getBBox();
   const w = Math.max(60, tb.width + 6);
@@ -257,10 +268,19 @@ const drawCauseLabel = (
   x: number,
   y: number,
   direction: 1 | -1,
+  fontSize: number,
   roughContext?: RoughContext
 ) => {
   const lg = svg.append('g').attr('class', 'ishikawa-label-group');
-  const lt = drawMultilineText(lg, text, x, y + 11 * direction, 'ishikawa-label cause', 'middle');
+  const lt = drawMultilineText(
+    lg,
+    text,
+    x,
+    y + 11 * direction,
+    'ishikawa-label cause',
+    'middle',
+    fontSize
+  );
   const tb = lt.node()!.getBBox();
   if (roughContext) {
     const roughNode = roughContext.roughSvg.rectangle(
@@ -329,6 +349,7 @@ const drawBranch = (
   startY: number,
   direction: 1 | -1,
   length: number,
+  fontSize: number,
   roughContext?: RoughContext
 ): void => {
   const children = node.children ?? [];
@@ -342,7 +363,7 @@ const drawBranch = (
   if (roughContext) {
     drawArrowMarker(svg, startX, startY, startX - endX, startY - endY, roughContext);
   }
-  drawCauseLabel(svg, node.text, endX, endY, direction, roughContext);
+  drawCauseLabel(svg, node.text, endX, endY, direction, fontSize, roughContext);
 
   if (!children.length) {
     return;
@@ -388,7 +409,7 @@ const drawBranch = (
       if (roughContext) {
         drawArrowMarker(grp, bx0, y, 1, 0, roughContext);
       }
-      drawMultilineText(grp, e.text, bx1, y, 'ishikawa-label align', 'end');
+      drawMultilineText(grp, e.text, bx1, y, 'ishikawa-label align', 'end', fontSize);
     } else {
       // Diagonal bone: start from evenly-spaced point on parent's horizontal, angle toward target Y
       const k = par.childrenDrawn++;
@@ -399,7 +420,7 @@ const drawBranch = (
       if (roughContext) {
         drawArrowMarker(grp, bx0, by0, bx0 - bx1, by0 - y, roughContext);
       }
-      drawMultilineText(grp, e.text, bx1, y, oddLabel, 'end');
+      drawMultilineText(grp, e.text, bx1, y, oddLabel, 'end', fontSize);
     }
 
     if (e.childCount > 0) {
@@ -439,10 +460,11 @@ const drawMultilineText = (
   x: number,
   y: number,
   cls: string,
-  anchor: 'middle' | 'start' | 'end'
+  anchor: 'middle' | 'start' | 'end',
+  fontSize: number
 ) => {
   const lines = splitLines(text);
-  const lh = FONT_SIZE * 1.05;
+  const lh = fontSize * 1.05;
   const el = g
     .append('text')
     .attr('class', cls)
