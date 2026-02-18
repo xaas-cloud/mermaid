@@ -13,10 +13,14 @@ export default {
     set A
     set B
     set C
-    union A,B    label: AB, background: skyblue
-    union B,C    label: BC, background: orange
-    union A,C    label: AC, background: lightgreen
-    union A,B,C  label: ABC, color: red,  background: white
+    union A,B["AB"]
+    union B,C["BC"]
+    union A,C["AC"]
+    union A,B,C["ABC"]
+    style A,B fill:skyblue
+    style B,C fill:orange
+    style A,C fill:lightgreen
+    style A,B,C fill:white, color:red
     `,
     },
   ],

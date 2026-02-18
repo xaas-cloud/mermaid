@@ -11,11 +11,12 @@ const createDiagram = (overrides: Partial<Record<string, unknown>> = {}) => {
     }),
     getDiagramTitle: () => undefined,
     getSubsetData: () => [
-      { sets: ['A'], size: 10, label: 'A', color: undefined, background: undefined },
-      { sets: ['B'], size: 10, label: 'B', color: undefined, background: undefined },
-      { sets: ['A', 'B'], size: 2.5, label: 'AB', color: undefined, background: undefined },
+      { sets: ['A'], size: 10, label: 'A' },
+      { sets: ['B'], size: 10, label: 'B' },
+      { sets: ['A', 'B'], size: 2.5, label: 'AB' },
     ],
     getTextData: () => [],
+    getStyleData: () => [],
   };
 
   return {
@@ -36,13 +37,14 @@ describe('vennRenderer', () => {
     expect(title?.textContent).toBe('My Venn Title');
   });
 
-  it('renders text nodes with custom color', async () => {
+  it('renders text nodes with custom color via style data', async () => {
     document.body.innerHTML = '<svg id="venn"></svg>';
     const diagram = createDiagram({
       getTextData: () => [
-        { sets: ['A'], id: 'alpha', label: undefined, color: '#ff0000' },
-        { sets: ['A', 'B'], id: 'shared', label: undefined, color: undefined },
+        { sets: ['A'], id: 'alpha', label: undefined },
+        { sets: ['A', 'B'], id: 'shared', label: undefined },
       ],
+      getStyleData: () => [{ targets: ['alpha'], styles: { color: '#ff0000' } }],
     });
 
     await draw('', 'venn', '1.0', diagram);
@@ -67,19 +69,16 @@ describe('vennRenderer', () => {
     expect(circles[1]?.classList.contains('venn-set-1')).toBe(true);
   });
 
-  it('user override colors take priority over theme', async () => {
+  it('user override colors take priority over theme via style data', async () => {
     document.body.innerHTML = '<svg id="venn"></svg>';
     const diagram = createDiagram({
       getSubsetData: () => [
-        { sets: ['A'], size: 10, label: 'A', color: undefined, background: undefined },
-        { sets: ['B'], size: 10, label: 'B', color: undefined, background: undefined },
-        {
-          sets: ['A', 'B'],
-          size: 2.5,
-          label: 'AB',
-          color: '#00ff00',
-          background: 'gold',
-        },
+        { sets: ['A'], size: 10, label: 'A' },
+        { sets: ['B'], size: 10, label: 'B' },
+        { sets: ['A', 'B'], size: 2.5, label: 'AB' },
+      ],
+      getStyleData: () => [
+        { targets: ['A', 'B'], styles: { color: '#00ff00', fill: 'gold' } },
       ],
     });
 
@@ -158,7 +157,7 @@ describe('vennRenderer', () => {
         textMinFontSize: 12,
         textMaxFontSize: 28,
       }),
-      getTextData: () => [{ sets: ['A'], id: 'alpha', label: undefined, color: undefined }],
+      getTextData: () => [{ sets: ['A'], id: 'alpha', label: undefined }],
     });
 
     await draw('', 'venn', '1.0', diagram);

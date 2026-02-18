@@ -26,88 +26,194 @@ describe('Venn diagram', function () {
     ]);
   });
 
-  test('with options', () => {
+  test('with bracket labels', () => {
     const str = `venn-beta
-          title foo bar
-          set A
-          set B       size : 20,   label : foo
-          set C       size : 30,   label : bar
-          union A,B   size : 5.3,  label : buz buz
-          union C, A,B             label : "Hello, world!"
+          set A["Alpha"]
+          set B["Beta"]
+          union A,B["AB"]
       `;
     venn.parse(str);
     expect(db.getSubsetData()).toEqual([
-      expect.objectContaining({ sets: ['A'], size: 10 }),
-      expect.objectContaining({ sets: ['B'], size: 20, label: 'foo' }),
-      expect.objectContaining({ sets: ['C'], size: 30, label: 'bar' }),
-      expect.objectContaining({ sets: ['A', 'B'], size: 5.3, label: 'buz buz' }),
-      expect.objectContaining({
-        sets: ['A', 'B', 'C'],
-        size: 1.1111111111111112,
-        label: 'Hello, world!',
-      }),
+      expect.objectContaining({ sets: ['A'], size: 10, label: 'Alpha' }),
+      expect.objectContaining({ sets: ['B'], size: 10, label: 'Beta' }),
+      expect.objectContaining({ sets: ['A', 'B'], size: 2.5, label: 'AB' }),
     ]);
   });
 
-  test('with text nodes', () => {
+  test('with unquoted bracket labels', () => {
+    const str = `venn-beta
+          set A[Alpha]
+          set B[Beta]
+          union A,B[AB]
+      `;
+    venn.parse(str);
+    expect(db.getSubsetData()).toEqual([
+      expect.objectContaining({ sets: ['A'], size: 10, label: 'Alpha' }),
+      expect.objectContaining({ sets: ['B'], size: 10, label: 'Beta' }),
+      expect.objectContaining({ sets: ['A', 'B'], size: 2.5, label: 'AB' }),
+    ]);
+  });
+
+  test('with size suffix', () => {
+    const str = `venn-beta
+          set A:20
+          set B:12
+          union A,B:3
+      `;
+    venn.parse(str);
+    expect(db.getSubsetData()).toEqual([
+      expect.objectContaining({ sets: ['A'], size: 20 }),
+      expect.objectContaining({ sets: ['B'], size: 12 }),
+      expect.objectContaining({ sets: ['A', 'B'], size: 3 }),
+    ]);
+  });
+
+  test('with bracket label and size suffix', () => {
+    const str = `venn-beta
+          title foo bar
+          set A["Alpha"]:20
+          set B["Beta"]:12
+          set C["Gamma"]:30
+          union A,B["AB"]:5.3
+          union C,A,B:1
+      `;
+    venn.parse(str);
+    expect(db.getSubsetData()).toEqual([
+      expect.objectContaining({ sets: ['A'], size: 20, label: 'Alpha' }),
+      expect.objectContaining({ sets: ['B'], size: 12, label: 'Beta' }),
+      expect.objectContaining({ sets: ['C'], size: 30, label: 'Gamma' }),
+      expect.objectContaining({ sets: ['A', 'B'], size: 5.3, label: 'AB' }),
+      expect.objectContaining({ sets: ['A', 'B', 'C'], size: 1 }),
+    ]);
+  });
+
+  test('with text nodes using bracket labels', () => {
     const str = `venn-beta
           set A
-            text A1     label: foo bar
+            text A1["foo bar"]
           set B
-            text B1     label: "hello, world",  color: red
-            text B2     label: "hex",  color: #fff
-            text B3     label: "rgb",  color: rgb(255, 0, 128)
-            text B4     label: "rgba", color: rgba(255, 0, 128, 0.5)
+            text B1["hello, world"]
           union A,B
-            text AB1    label: "shared note"
+            text AB1["shared note"]
       `;
     venn.parse(str);
     expect(db.getTextData()).toEqual([
       expect.objectContaining({ sets: ['A'], id: 'A1', label: 'foo bar' }),
-      expect.objectContaining({ sets: ['B'], id: 'B1', label: 'hello, world', color: 'red' }),
-      expect.objectContaining({ sets: ['B'], id: 'B2', label: 'hex', color: '#fff' }),
-      expect.objectContaining({ sets: ['B'], id: 'B3', label: 'rgb', color: 'rgb(255, 0, 128)' }),
-      expect.objectContaining({
-        sets: ['B'],
-        id: 'B4',
-        label: 'rgba',
-        color: 'rgba(255, 0, 128, 0.5)',
-      }),
+      expect.objectContaining({ sets: ['B'], id: 'B1', label: 'hello, world' }),
       expect.objectContaining({ sets: ['A', 'B'], id: 'AB1', label: 'shared note' }),
     ]);
   });
 
-  test('with indented text nodes', () => {
+  test('with indented text nodes (no label)', () => {
     const str = `venn-beta
-          set A   label: Frontend
+          set A["Frontend"]
             text A1
             text A2
-          set B   label: Backend
+          set B["Backend"]
             text B1
-          union A,B label: APIs
-            text AB1, label: OpenAPI
+          union A,B["APIs"]
       `;
     venn.parse(str);
     expect(db.getTextData()).toEqual([
       expect.objectContaining({ sets: ['A'], id: 'A1', label: undefined }),
       expect.objectContaining({ sets: ['A'], id: 'A2', label: undefined }),
       expect.objectContaining({ sets: ['B'], id: 'B1', label: undefined }),
-      expect.objectContaining({ sets: ['A', 'B'], id: 'AB1', label: 'OpenAPI' }),
     ]);
   });
 
-  test('text nodes allow styling', () => {
+  test('with style statement for single set', () => {
     const str = `venn-beta
           set A
-            text A1, color: red
           set B
-          union A,B label: AB
-            text AB1 color: #fff
+          union A,B
+          style A fill:#ff6b6b
       `;
     venn.parse(str);
+    expect(db.getStyleData()).toEqual([
+      expect.objectContaining({ targets: ['A'], styles: { fill: '#ff6b6b' } }),
+    ]);
+  });
+
+  test('with style statement for intersection', () => {
+    const str = `venn-beta
+          set A
+          set B
+          union A,B
+          style A,B color:#333
+      `;
+    venn.parse(str);
+    expect(db.getStyleData()).toEqual([
+      expect.objectContaining({ targets: ['A', 'B'], styles: { color: '#333' } }),
+    ]);
+  });
+
+  test('with style statement for text node', () => {
+    const str = `venn-beta
+          set A
+            text A1["React"]
+          style A1 color:red
+      `;
+    venn.parse(str);
+    expect(db.getStyleData()).toEqual([
+      expect.objectContaining({ targets: ['A1'], styles: { color: 'red' } }),
+    ]);
+  });
+
+  test('with multiple style properties', () => {
+    const str = `venn-beta
+          set A
+          set B
+          union A,B
+          style A fill:#ff6b6b, color:#333
+      `;
+    venn.parse(str);
+    expect(db.getStyleData()).toEqual([
+      expect.objectContaining({
+        targets: ['A'],
+        styles: { fill: '#ff6b6b', color: '#333' },
+      }),
+    ]);
+  });
+
+  test('style with rgb/rgba colors', () => {
+    const str = `venn-beta
+          set A
+          set B
+          style A fill:rgb(255, 0, 128)
+          style B fill:rgba(255, 0, 128, 0.5)
+      `;
+    venn.parse(str);
+    expect(db.getStyleData()).toEqual([
+      expect.objectContaining({ targets: ['A'], styles: { fill: 'rgb(255, 0, 128)' } }),
+      expect.objectContaining({ targets: ['B'], styles: { fill: 'rgba(255, 0, 128, 0.5)' } }),
+    ]);
+  });
+
+  test('indent mode with style coexistence', () => {
+    const str = `venn-beta
+          set A["Frontend"]:20
+            text A1["React"]
+          set B["Backend"]:12
+          union A,B["Shared"]:3
+            text AB1["OpenAPI"]
+          style A fill:#ff6b6b
+          style A,B color:#333
+          style A1 color:red
+      `;
+    venn.parse(str);
+    expect(db.getSubsetData()).toEqual([
+      expect.objectContaining({ sets: ['A'], size: 20, label: 'Frontend' }),
+      expect.objectContaining({ sets: ['B'], size: 12, label: 'Backend' }),
+      expect.objectContaining({ sets: ['A', 'B'], size: 3, label: 'Shared' }),
+    ]);
     expect(db.getTextData()).toEqual([
-      expect.objectContaining({ sets: ['A'], id: 'A1', label: undefined, color: 'red' }),
-      expect.objectContaining({ sets: ['A', 'B'], id: 'AB1', label: undefined, color: '#fff' }),
+      expect.objectContaining({ sets: ['A'], id: 'A1', label: 'React' }),
+      expect.objectContaining({ sets: ['A', 'B'], id: 'AB1', label: 'OpenAPI' }),
+    ]);
+    expect(db.getStyleData()).toEqual([
+      expect.objectContaining({ targets: ['A'], styles: { fill: '#ff6b6b' } }),
+      expect.objectContaining({ targets: ['A', 'B'], styles: { color: '#333' } }),
+      expect.objectContaining({ targets: ['A1'], styles: { color: 'red' } }),
     ]);
   });
 
@@ -115,7 +221,7 @@ describe('Venn diagram', function () {
     const str = `venn-beta
         set A,B
     `;
-    expect(() => venn.parse(str)).toThrow('set requires single identifier');
+    expect(() => venn.parse(str)).toThrow();
   });
 
   test('union requires multiple identifiers', () => {
@@ -146,4 +252,5 @@ describe('Venn diagram', function () {
       expect.objectContaining({ sets: ['Buz', 'Foo Bar'], size: 2.5 }),
     ]);
   });
+
 });

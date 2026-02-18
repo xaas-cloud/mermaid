@@ -1,4 +1,4 @@
-import type { VennDB, VennData, VennTextData } from './vennTypes.js';
+import type { VennDB, VennData, VennTextData, VennStyleData } from './vennTypes.js';
 import type { VennDiagramConfig } from '../../config.type.js';
 import { cleanAndMerge } from '../../utils.js';
 import { getConfig as commonGetConfig } from '../../config.js';
@@ -15,15 +15,14 @@ import DEFAULT_CONFIG from '../../defaultConfig.js';
 
 const subsets: VennData[] = [];
 const textNodes: VennTextData[] = [];
+const styleEntries: VennStyleData[] = [];
 const knownSets = new Set<string>();
 let currentSets: string[] | undefined;
 let indentMode = false;
 
-export const addSubsetData: VennDB['addSubsetData'] = (identifierList, data) => {
-  const { size: rawSize, label, color, background } = Object.fromEntries(data ?? []);
-
-  const size = rawSize ? parseFloat(rawSize) : 10 / Math.pow(identifierList.length, 2);
+export const addSubsetData: VennDB['addSubsetData'] = (identifierList, label, size) => {
   const sets = normalizeIdentifierList(identifierList).sort();
+  const resolvedSize = size ?? 10 / Math.pow(identifierList.length, 2);
   currentSets = sets;
   if (sets.length === 1) {
     knownSets.add(sets[0]);
@@ -31,10 +30,8 @@ export const addSubsetData: VennDB['addSubsetData'] = (identifierList, data) => 
 
   subsets.push({
     sets,
-    size,
-    label: normalizeStyleValue(label),
-    color: normalizeStyleValue(color),
-    background: normalizeStyleValue(background),
+    size: resolvedSize,
+    label: label ? normalizeText(label) : undefined,
   });
 };
 
@@ -54,17 +51,26 @@ const normalizeStyleValue = (value: string | undefined): string | undefined => {
   return value ? normalizeText(value) : value;
 };
 
-export const addTextData: VennDB['addTextData'] = (identifierList, text, data) => {
-  const styleEntries = Object.fromEntries(data ?? []);
-  const color = normalizeStyleValue(styleEntries.color ?? styleEntries.textColor);
-  const label = normalizeStyleValue(styleEntries.label);
-  const id = normalizeText(text);
+export const addTextData: VennDB['addTextData'] = (identifierList, id, label) => {
+  const normalizedId = normalizeText(id);
   textNodes.push({
     sets: normalizeIdentifierList(identifierList).sort(),
-    id,
-    label,
-    color,
+    id: normalizedId,
+    label: label ? normalizeText(label) : undefined,
   });
+};
+
+export const addStyleData: VennDB['addStyleData'] = (identifierList, data) => {
+  const targets = normalizeIdentifierList(identifierList).sort();
+  const styles: Record<string, string> = {};
+  for (const [key, value] of data) {
+    styles[key] = normalizeStyleValue(value) ?? value;
+  }
+  styleEntries.push({ targets, styles });
+};
+
+export const getStyleData = () => {
+  return styleEntries;
 };
 
 const normalizeIdentifierList = (identifierList: string[]) => {
@@ -99,6 +105,7 @@ const customClear = () => {
   clear();
   subsets.length = 0;
   textNodes.length = 0;
+  styleEntries.length = 0;
   knownSets.clear();
   currentSets = undefined;
   indentMode = false;
@@ -116,8 +123,10 @@ export const db: VennDB = {
   addSubsetData,
   getSubsetData,
   addTextData,
+  addStyleData,
   validateUnionIdentifiers,
   getTextData,
+  getStyleData,
   getCurrentSets,
   getIndentMode,
   setIndentMode,

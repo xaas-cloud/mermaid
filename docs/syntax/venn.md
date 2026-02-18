@@ -24,86 +24,66 @@ venn-beta
   title "Team overlap"
   set Frontend
   set Backend
-  union Frontend,Backend label: "APIs"
+  union Frontend,Backend["APIs"]
 ```
 
-```mermaid
-venn-beta
-  title "Team overlap"
-  set Frontend
-  set Backend
-  union Frontend,Backend label: "APIs"
-```
+### Labels
 
-### Styling
-
-You can add optional style fields to `set` and `union` lines:
-
-- `size`: change the size of set and unions
-- `label`: change the display label while keeping the identifier short
-- `color`: change the label color
-- `background`: fill color
+Use bracket syntax `["..."]` to set a display label while keeping the identifier short:
 
 ```mermaid-example
 venn-beta
-  set A     size: 20, label: Alpha
-  set B     size: 12, label: Beta
-  union A,B size: 3,  label: AB, background: lightgreen, color: #333
+  set A["Alpha"]
+  set B["Beta"]
+  union A,B["AB"]
 ```
 
-```mermaid
+### Sizes
+
+Use `:N` suffix to set the size of a set or union:
+
+```mermaid-example
 venn-beta
-  set A     size: 20, label: Alpha
-  set B     size: 12, label: Beta
-  union A,B size: 3,  label: AB, background: lightgreen, color: #333
+  set A["Alpha"]:20
+  set B["Beta"]:12
+  union A,B["AB"]:3
 ```
 
 ### Text nodes
 
 - Use `text` to place labels inside a set or union.
 - Indented `text` lines attach to the most recent `set` or `union`.
+- Use bracket syntax `["..."]` to set a display label for text nodes.
 
 ```mermaid-example
 venn-beta
-  set A label: Frontend
-    text React
-    text "Design Systems"
-  set B label: Backend
-    text API
-  union A,B label: Shared
-    text "OpenAPI"
+  set A["Frontend"]
+    text A1["React"]
+    text A2["Design Systems"]
+  set B["Backend"]
+    text B1["API"]
+  union A,B["Shared"]
+    text AB1["OpenAPI"]
 ```
 
-```mermaid
-venn-beta
-  set A label: Frontend
-    text React
-    text "Design Systems"
-  set B label: Backend
-    text API
-  union A,B label: Shared
-    text "OpenAPI"
-```
+### Styling
 
-### Styling text nodes
+Use `style` statements to apply visual styles to sets, unions, and text nodes:
 
-You can add optional style fields to `text` lines:
-
-- `label`: change the display label while keeping the identifier short
-- `color`: change the label color
+- `fill`: change the fill color
+- `color`: change the text color
+- `stroke`: change the stroke color
+- `stroke-width`: change the stroke width
+- `fill-opacity`: change the fill opacity
 
 ```mermaid-example
 venn-beta
-  set A
-    text A1  label: React
-    text A2  label: Design Systems,  color: red
-  set B
-```
-
-```mermaid
-venn-beta
-  set A
-    text A1  label: React
-    text A2  label: Design Systems,  color: red
-  set B
+  set A["Alpha"]:20
+    text A1["React"]
+    text A2["Design Systems"]
+  set B["Beta"]:12
+  union A,B["AB"]:3
+  style A fill:#ff6b6b
+  style A,B color:#333
+  style A1 color:red
 ```

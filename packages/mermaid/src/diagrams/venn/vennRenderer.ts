@@ -1,5 +1,5 @@
 import type { Diagram } from '../../Diagram.js';
-import type { VennData, VennDB, VennTextData } from './vennTypes.js';
+import type { VennData, VennDB, VennTextData, VennStyleData } from './vennTypes.js';
 import type { DiagramRenderer, DrawDefinition } from '../../diagram-api/types.js';
 import type { VennDiagramConfig } from '../../config.type.js';
 import type { Selection } from 'd3';
@@ -12,6 +12,20 @@ import * as venn from '@upsetjs/venn.js';
 import { configureSvgSize } from '../../setupGraphViewbox.js';
 
 type DummyD3Root = Selection<HTMLDivElement, unknown, null, undefined>;
+
+function buildStyleByKey(styleData: VennStyleData[]): Map<string, Record<string, string>> {
+  const map = new Map<string, Record<string, string>>();
+  for (const entry of styleData) {
+    const key = entry.targets.join('|');
+    const existing = map.get(key);
+    if (existing) {
+      Object.assign(existing, entry.styles);
+    } else {
+      map.set(key, { ...entry.styles });
+    }
+  }
+  return map;
+}
 
 export const draw: DrawDefinition = (
   _text: string,
@@ -35,6 +49,7 @@ export const draw: DrawDefinition = (
   const title = db.getDiagramTitle?.();
   const sets = db.getSubsetData();
   const textNodes = db.getTextData();
+  const styleByKey = buildStyleByKey(db.getStyleData());
 
   // Configurable viewBox size with scale factor for proportional rendering
   const svgWidth = config?.width ?? 800;
@@ -43,14 +58,7 @@ export const draw: DrawDefinition = (
   const scale = svgWidth / REFERENCE_WIDTH;
   const titleHeight = title ? 48 * scale : 0;
 
-  // Build lookup tables for custom colors per set/union
   const defaultTextColor = themeVariables.primaryTextColor ?? themeVariables.textColor;
-  const customFontColorMap = new Map<VennData['sets'], string>(
-    sets.filter((s) => s.color).map((s) => [s.sets, s.color!])
-  );
-  const customBackgroundColorMap = new Map<VennData['sets'], string>(
-    sets.filter((s) => s.background).map((s) => [s.sets, s.background!])
-  );
 
   // Prepare the target viewBox
   const svg = selectSvgElement(id);
@@ -92,24 +100,27 @@ export const draw: DrawDefinition = (
   }
 
   if (textNodes.length > 0) {
-    renderTextNodes(config, layoutByKey, dummyD3root, textNodes, scale);
+    renderTextNodes(config, layoutByKey, dummyD3root, textNodes, scale, styleByKey);
   }
 
   // Style the set circles with theme colors
   const themeDark = isDark(themeVariables.background || '#f4f4f4');
-  dummyD3root.selectAll('.venn-circle').each(function (_, i) {
+  dummyD3root.selectAll('.venn-circle').each(function (d, i) {
     const group = d3select(this as Element);
-    const baseColor = themeColors[i % themeColors.length] || themeVariables.primaryColor;
+    const data = d as VennData;
+    const setsKey = stableSetsKey([...data.sets].sort());
+    const customStyle = styleByKey.get(setsKey);
+    const baseColor = customStyle?.fill || themeColors[i % themeColors.length] || themeVariables.primaryColor;
     group.classed(`venn-set-${i % 8}`, true);
     group
       .select('path')
       .style('fill', baseColor)
-      .style('fill-opacity', 0.1)
-      .style('stroke', baseColor)
-      .style('stroke-width', 5 * scale)
+      .style('fill-opacity', customStyle?.['fill-opacity'] ?? 0.1)
+      .style('stroke', customStyle?.stroke || baseColor)
+      .style('stroke-width', customStyle?.['stroke-width'] || `${5 * scale}`)
       .style('stroke-opacity', 0.95);
     // Blend border color toward black (light theme) or white (dark theme) for readable text
-    const textColor: string = themeDark ? lighten(baseColor, 30) : darken(baseColor, 30);
+    const textColor: string = customStyle?.color || (themeDark ? lighten(baseColor, 30) : darken(baseColor, 30));
     group
       .select('text')
       .style('font-size', `${48 * scale}px`)
@@ -122,15 +133,26 @@ export const draw: DrawDefinition = (
     .style('font-size', `${48 * scale}px`)
     .style(
       'fill',
-      (e) =>
-        customFontColorMap.get((e as VennData).sets) ??
-        themeVariables.vennSetTextColor ??
-        defaultTextColor
+      (e) => {
+        const data = e as VennData;
+        const setsKey = stableSetsKey([...data.sets].sort());
+        return styleByKey.get(setsKey)?.color ??
+          themeVariables.vennSetTextColor ??
+          defaultTextColor;
+      }
     );
   dummyD3root
     .selectAll('.venn-intersection path')
-    .style('fill-opacity', (e) => (customBackgroundColorMap.has((e as VennData).sets) ? 1 : 0))
-    .style('fill', (e) => customBackgroundColorMap.get((e as VennData).sets) ?? 'transparent');
+    .style('fill-opacity', (e) => {
+      const data = e as VennData;
+      const setsKey = stableSetsKey([...data.sets].sort());
+      return styleByKey.get(setsKey)?.fill ? 1 : 0;
+    })
+    .style('fill', (e) => {
+      const data = e as VennData;
+      const setsKey = stableSetsKey([...data.sets].sort());
+      return styleByKey.get(setsKey)?.fill ?? 'transparent';
+    });
 
   // Transfer the dummy SVG contents into the real SVG group
   const vennGroup = svg.append('g').attr('transform', `translate(0, ${titleHeight})`);
@@ -152,7 +174,8 @@ function renderTextNodes(
   layoutByKey: Map<string, venn.IVennLayout<VennData>>,
   dummyD3root: DummyD3Root,
   textNodes: VennTextData[],
-  scale: number
+  scale: number,
+  styleByKey: Map<string, Record<string, string>>
 ) {
   const useDebugLayout = config?.useDebugLayout ?? false;
   const vennSvg = dummyD3root.select('svg');
@@ -253,6 +276,7 @@ function renderTextNodes(
         .attr('y', y - boxHeight / 2)
         .attr('overflow', 'visible');
 
+      const textColor = styleByKey.get(node.id)?.color;
       const text = container
         .append('xhtml:span')
         .attr('class', 'venn-text-node')
@@ -267,8 +291,8 @@ function renderTextNodes(
         .style('word-break', 'normal')
         .text(node.label ?? node.id);
 
-      if (node.color) {
-        text.style('color', node.color);
+      if (textColor) {
+        text.style('color', textColor);
       }
     }
   }

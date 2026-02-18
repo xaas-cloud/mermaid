@@ -43,13 +43,13 @@ describe('Venn Diagram', () => {
   it('4: should render a venn diagram with custom set sizes', () => {
     imgSnapshotTest(
       `venn-beta
-        set A size: 20
-        set B size: 15
-        set C size: 10
-        union A, B size: 5
-        union B, C size: 3
-        union A, C size: 2
-        union A, B, C size: 1
+        set A:20
+        set B:15
+        set C:10
+        union A, B:5
+        union B, C:3
+        union A, C:2
+        union A, B, C:1
       `
     );
   });
@@ -58,9 +58,9 @@ describe('Venn Diagram', () => {
     imgSnapshotTest(
       `venn-beta
         title Team Skills
-        set Frontend label: "Frontend"
-        set Backend label: "Backend"
-        union Frontend, Backend label: "Fullstack"
+        set Frontend["Frontend"]
+        set Backend["Backend"]
+        union Frontend, Backend["Fullstack"]
       `
     );
   });
@@ -79,12 +79,15 @@ describe('Venn Diagram', () => {
     );
   });
 
-  it('7: should render a venn diagram with custom colors', () => {
+  it('7: should render a venn diagram with custom colors via style', () => {
     imgSnapshotTest(
       `venn-beta
-        set A background: #ff6b6b
-        set B background: #4ecdc4
-        union A, B background: #ffe66d
+        set A
+        set B
+        union A, B
+        style A fill:#ff6b6b
+        style B fill:#4ecdc4
+        style A,B fill:#ffe66d
       `
     );
   });
@@ -133,15 +136,18 @@ describe('Venn Diagram', () => {
     );
   });
 
-  it('11: should render a venn diagram with custom text colors', () => {
+  it('11: should render a venn diagram with custom text colors via style', () => {
     imgSnapshotTest(
       `venn-beta
         set A
-          text "Red Text" color: #ff0000
+          text A1["Red Text"]
         set B
-          text "Blue Text" color: #0000ff
+          text B1["Blue Text"]
         union A, B
-          text "Green Text" color: #00ff00
+          text AB1["Green Text"]
+        style A1 color:#ff0000
+        style B1 color:#0000ff
+        style AB1 color:#00ff00
       `
     );
   });
@@ -149,29 +155,29 @@ describe('Venn Diagram', () => {
   it('12: should render a two-set venn with asymmetric sizes', () => {
     imgSnapshotTest(
       `venn-beta
-        set A size: 30
-        set B size: 10
-        union A, B size: 5
+        set A:30
+        set B:10
+        union A, B:5
       `
     );
   });
 
-  it('13: should render a complex venn with labels, text nodes, and colors', () => {
+  it('13: should render a complex venn with labels, text nodes, and styles', () => {
     imgSnapshotTest(
       `venn-beta
         title Software Engineering Skills
-        set Frontend label: "Frontend" background: #ff6b6b
+        set Frontend["Frontend"]
           text "React"
           text "CSS"
           text "HTML"
-        set Backend label: "Backend" background: #4ecdc4
+        set Backend["Backend"]
           text "Node.js"
           text "SQL"
           text "APIs"
-        set DevOps label: "DevOps" background: #45b7d1
+        set DevOps["DevOps"]
           text "Docker"
           text "CI/CD"
-        union Frontend, Backend label: "Fullstack"
+        union Frontend, Backend["Fullstack"]
           text "REST"
           text "GraphQL"
         union Backend, DevOps
@@ -180,6 +186,9 @@ describe('Venn Diagram', () => {
           text "Performance"
         union Frontend, Backend, DevOps
           text "Architecture"
+        style Frontend fill:#ff6b6b
+        style Backend fill:#4ecdc4
+        style DevOps fill:#45b7d1
       `
     );
   });

@@ -28,7 +28,10 @@
 "set"              { return 'SET'; }
 "union"            { return 'UNION'; }
 "text"             { if (yy.consumeIndentText) { yy.consumeIndentText = false; } else { return 'TEXT'; } }
-"label"(?=\s*:)    { return 'LABEL'; }
+"style"            { return 'STYLE'; }
+
+\[\"[^\"]*\"\]                                                    { yytext = yytext.slice(2, -2); return 'BRACKET_LABEL'; }
+\[[^\]\"]+\]                                                      { yytext = yytext.slice(1, -1).trim(); return 'BRACKET_LABEL'; }
 
 [+-]?(\d+(\.\d+)?|\.\d+)                                              { return 'NUMERIC'; }
 \#[0-9a-fA-F]{3,8}                                                    { return 'HEXCOLOR'; }
@@ -66,39 +69,39 @@ line
   ;
 
 statement
-  : TITLE                          { yy.setDiagramTitle($1.substr(6)); $$ = $1.substr(6); }
-  | SET identifierList             { if ($identifierList.length !== 1) { throw new Error('set requires single identifier'); } yy.addSubsetData($identifierList, undefined); if (yy.setIndentMode) { yy.setIndentMode(true); } }
-  | SET identifierList stylesOpt   { if ($identifierList.length !== 1) { throw new Error('set requires single identifier'); } yy.addSubsetData($identifierList, $stylesOpt); if (yy.setIndentMode) { yy.setIndentMode(true); } }
-  | UNION identifierList           { if ($identifierList.length < 2) { throw new Error('union requires multiple identifiers'); } if (yy.validateUnionIdentifiers) { yy.validateUnionIdentifiers($identifierList); } yy.addSubsetData($identifierList, undefined); if (yy.setIndentMode) { yy.setIndentMode(true); } }
-  | UNION identifierList stylesOpt { if ($identifierList.length < 2) { throw new Error('union requires multiple identifiers'); } if (yy.validateUnionIdentifiers) { yy.validateUnionIdentifiers($identifierList); } yy.addSubsetData($identifierList, $stylesOpt); if (yy.setIndentMode) { yy.setIndentMode(true); } }
-  | TEXT identifierList stylesOpt  { yy.addTextData($identifierList, "", $stylesOpt); }
-  | INDENT_TEXT indentedTextTail   { $$ = $2; }
+  : TITLE                                            { yy.setDiagramTitle($1.substr(6)); $$ = $1.substr(6); }
+  | SET identifier                                   { yy.addSubsetData([$identifier], undefined, undefined); if (yy.setIndentMode) { yy.setIndentMode(true); } }
+  | SET identifier BRACKET_LABEL                     { yy.addSubsetData([$identifier], $BRACKET_LABEL, undefined); if (yy.setIndentMode) { yy.setIndentMode(true); } }
+  | SET identifier COLON NUMERIC                     { yy.addSubsetData([$identifier], undefined, parseFloat($NUMERIC)); if (yy.setIndentMode) { yy.setIndentMode(true); } }
+  | SET identifier BRACKET_LABEL COLON NUMERIC       { yy.addSubsetData([$identifier], $BRACKET_LABEL, parseFloat($NUMERIC)); if (yy.setIndentMode) { yy.setIndentMode(true); } }
+  | UNION identifierList                             { if ($identifierList.length < 2) { throw new Error('union requires multiple identifiers'); } if (yy.validateUnionIdentifiers) { yy.validateUnionIdentifiers($identifierList); } yy.addSubsetData($identifierList, undefined, undefined); if (yy.setIndentMode) { yy.setIndentMode(true); } }
+  | UNION identifierList BRACKET_LABEL               { if ($identifierList.length < 2) { throw new Error('union requires multiple identifiers'); } if (yy.validateUnionIdentifiers) { yy.validateUnionIdentifiers($identifierList); } yy.addSubsetData($identifierList, $BRACKET_LABEL, undefined); if (yy.setIndentMode) { yy.setIndentMode(true); } }
+  | UNION identifierList COLON NUMERIC               { if ($identifierList.length < 2) { throw new Error('union requires multiple identifiers'); } if (yy.validateUnionIdentifiers) { yy.validateUnionIdentifiers($identifierList); } yy.addSubsetData($identifierList, undefined, parseFloat($NUMERIC)); if (yy.setIndentMode) { yy.setIndentMode(true); } }
+  | UNION identifierList BRACKET_LABEL COLON NUMERIC { if ($identifierList.length < 2) { throw new Error('union requires multiple identifiers'); } if (yy.validateUnionIdentifiers) { yy.validateUnionIdentifiers($identifierList); } yy.addSubsetData($identifierList, $BRACKET_LABEL, parseFloat($NUMERIC)); if (yy.setIndentMode) { yy.setIndentMode(true); } }
+  | TEXT identifierList IDENTIFIER                     { yy.addTextData($identifierList, $IDENTIFIER, undefined); }
+  | TEXT identifierList STRING                          { yy.addTextData($identifierList, $STRING, undefined); }
+  | TEXT identifierList NUMERIC                         { yy.addTextData($identifierList, $NUMERIC, undefined); }
+  | TEXT identifierList IDENTIFIER BRACKET_LABEL        { yy.addTextData($identifierList, $IDENTIFIER, $BRACKET_LABEL); }
+  | TEXT identifierList STRING BRACKET_LABEL            { yy.addTextData($identifierList, $STRING, $BRACKET_LABEL); }
+  | INDENT_TEXT indentedTextTail                     { $$ = $2; }
+  | STYLE identifierList stylesOpt                   { yy.addStyleData($identifierList, $stylesOpt); }
   ;
 
 indentedTextTail
-  : labelField                 { var currentSets = yy.getCurrentSets(); if (!currentSets) { throw new Error('text requires set'); } yy.addTextData(currentSets, "", [$labelField]); }
-  | labelField COMMA stylesOpt { var currentSets = yy.getCurrentSets(); if (!currentSets) { throw new Error('text requires set'); } yy.addTextData(currentSets, "", [$labelField, ...$stylesOpt]); }
-  | textValue                  { var currentSets = yy.getCurrentSets(); if (!currentSets) { throw new Error('text requires set'); } yy.addTextData(currentSets, $textValue, undefined); }
-  | textValue stylesOpt        { var currentSets = yy.getCurrentSets(); if (!currentSets) { throw new Error('text requires set'); } yy.addTextData(currentSets, $textValue, $stylesOpt); }
-  | textValue COMMA stylesOpt  { var currentSets = yy.getCurrentSets(); if (!currentSets) { throw new Error('text requires set'); } yy.addTextData(currentSets, $textValue, $stylesOpt); }
+  : IDENTIFIER               { var cs = yy.getCurrentSets(); if (!cs) throw new Error('text requires set'); yy.addTextData(cs, $IDENTIFIER, undefined); }
+  | STRING                   { var cs = yy.getCurrentSets(); if (!cs) throw new Error('text requires set'); yy.addTextData(cs, $STRING, undefined); }
+  | NUMERIC                  { var cs = yy.getCurrentSets(); if (!cs) throw new Error('text requires set'); yy.addTextData(cs, $NUMERIC, undefined); }
+  | IDENTIFIER BRACKET_LABEL { var cs = yy.getCurrentSets(); if (!cs) throw new Error('text requires set'); yy.addTextData(cs, $IDENTIFIER, $BRACKET_LABEL); }
+  | STRING BRACKET_LABEL     { var cs = yy.getCurrentSets(); if (!cs) throw new Error('text requires set'); yy.addTextData(cs, $STRING, $BRACKET_LABEL); }
   ;
 
 stylesOpt
-  : styleEntry                 { $$ = [$styleEntry] }
-  | stylesOpt COMMA styleEntry { $$ = [...$stylesOpt, $styleEntry] }
-  ;
-
-styleEntry
-  : styleField { $$ = $1 }
-  | labelField { $$ = $1 }
-  ;
-
-labelField
-  : LABEL COLON styleValue  { $$ = ['label', $3] }
+  : styleField                  { $$ = [$styleField] }
+  | stylesOpt COMMA styleField  { $$ = [...$stylesOpt, $styleField] }
   ;
 
 styleField
-  : IDENTIFIER COLON styleValue  { $$ = [$1, $3] }
+  : IDENTIFIER COLON styleValue { $$ = [$1, $3] }
   ;
 
 styleValue
@@ -117,12 +120,6 @@ valueToken
   | HEXCOLOR                     { $$ = $1; }
   | RGBCOLOR                     { $$ = $1; }
   | RGBACOLOR                    { $$ = $1; }
-  ;
-
-textValue
-  : STRING                       { $$ = $1; }
-  | IDENTIFIER                   { $$ = $1; }
-  | NUMERIC                      { $$ = $1; }
   ;
 
 identifierList
