@@ -3,7 +3,9 @@ import type { VennData, VennDB, VennTextData } from './vennTypes.js';
 import type { DiagramRenderer, DrawDefinition } from '../../diagram-api/types.js';
 import type { VennDiagramConfig } from '../../config.type.js';
 import type { Selection } from 'd3';
-import { schemeCategory10 as colors, select as d3select } from 'd3';
+import { select as d3select } from 'd3';
+// @ts-expect-error Incorrect khroma types
+import { isDark, lighten, darken } from 'khroma';
 import { getConfig } from '../../config.js';
 import { selectSvgElement } from '../../rendering-util/selectSvgElement.js';
 import * as venn from '@upsetjs/venn.js';
@@ -20,6 +22,16 @@ export const draw: DrawDefinition = (
   const db = diagObj.db as VennDB;
   const config = db.getConfig?.();
   const { themeVariables } = getConfig();
+  const themeColors: string[] = [
+    themeVariables.venn1,
+    themeVariables.venn2,
+    themeVariables.venn3,
+    themeVariables.venn4,
+    themeVariables.venn5,
+    themeVariables.venn6,
+    themeVariables.venn7,
+    themeVariables.venn8,
+  ].filter(Boolean);
   const title = db.getDiagramTitle?.();
   const titleHeight = title ? 48 : 0;
   const sets = db.getSubsetData();
@@ -44,11 +56,13 @@ export const draw: DrawDefinition = (
     svg
       .append('text')
       .text(title)
+      .attr('class', 'venn-title')
       .attr('font-size', '32px')
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'middle')
       .attr('x', '50%')
-      .attr('y', 32);
+      .attr('y', 32)
+      .style('fill', themeVariables.vennTitleTextColor || themeVariables.titleColor);
   }
 
   // Get the original SVG output of Venn.js from a dummy root
@@ -77,22 +91,35 @@ export const draw: DrawDefinition = (
     renderTextNodes(config, layoutByKey, dummyD3root, textNodes);
   }
 
-  // Style the set circles
-  dummyD3root
-    .selectAll('.venn-circle path')
-    .style('fill-opacity', 0)
-    .style('stroke-width', 5)
-    .style('stroke-opacity', 0.3)
-    .style('stroke', (_, i) => colors[i]);
-
-  // Style the set labels
-  dummyD3root.selectAll('.venn-circle text').style('font-size', '48px');
+  // Style the set circles with theme colors
+  const themeDark = isDark(themeVariables.background || '#f4f4f4');
+  dummyD3root.selectAll('.venn-circle').each(function (_, i) {
+    const group = d3select(this as Element);
+    const baseColor = themeColors[i % themeColors.length] || themeVariables.primaryColor;
+    group.classed(`venn-set-${i % 8}`, true);
+    group
+      .select('path')
+      .style('fill', baseColor)
+      .style('fill-opacity', 0.1)
+      .style('stroke', baseColor)
+      .style('stroke-width', 5)
+      .style('stroke-opacity', 0.95);
+    // Blend border color toward black (light theme) or white (dark theme) for readable text
+    const textColor: string = themeDark ? lighten(baseColor, 30) : darken(baseColor, 30);
+    group.select('text').style('font-size', '48px').style('fill', textColor);
+  });
 
   // Style the union labels
   dummyD3root
     .selectAll('.venn-intersection text')
     .style('font-size', '48px')
-    .style('fill', (e) => customFontColorMap.get((e as VennData).sets) ?? defaultTextColor);
+    .style(
+      'fill',
+      (e) =>
+        customFontColorMap.get((e as VennData).sets) ??
+        themeVariables.vennSetTextColor ??
+        defaultTextColor
+    );
   dummyD3root
     .selectAll('.venn-intersection path')
     .style('fill-opacity', (e) => (customBackgroundColorMap.has((e as VennData).sets) ? 1 : 0))
