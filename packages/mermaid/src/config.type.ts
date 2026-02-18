@@ -1643,6 +1643,14 @@ export interface RadarDiagramConfig extends BaseDiagramConfig {
  * via the `definition` "VennDiagramConfig".
  */
 export interface VennDiagramConfig extends BaseDiagramConfig {
+  /**
+   * The width of the Venn diagram.
+   */
+  width?: number;
+  /**
+   * The height of the Venn diagram.
+   */
+  height?: number;
   padding?: number;
   useDebugLayout?: boolean;
 }

@@ -68,7 +68,7 @@ describe('vennRenderer', () => {
     // Circle paths should have stroke style set (from theme colors)
     const path = circles[0]?.querySelector('path');
     expect(path?.style.stroke).toBeTruthy();
-    expect(path?.style.strokeWidth).toBe('5');
+    expect(path?.style.strokeWidth).toBe('2.5');
   });
 
   it('user override colors take priority over theme', async () => {

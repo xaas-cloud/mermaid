@@ -2349,6 +2349,16 @@ $defs: # JSON Schema definition (maybe we should move these to a separate file)
     type: object
     unevaluatedProperties: false
     properties:
+      width:
+        description: The width of the Venn diagram.
+        type: number
+        minimum: 1
+        default: 800
+      height:
+        description: The height of the Venn diagram.
+        type: number
+        minimum: 1
+        default: 450
       padding:
         type: number
         minimum: 0

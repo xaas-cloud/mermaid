@@ -33,9 +33,15 @@ export const draw: DrawDefinition = (
     themeVariables.venn8,
   ].filter(Boolean);
   const title = db.getDiagramTitle?.();
-  const titleHeight = title ? 48 : 0;
   const sets = db.getSubsetData();
   const textNodes = db.getTextData();
+
+  // Configurable viewBox size with scale factor for proportional rendering
+  const svgWidth = config?.width ?? 800;
+  const svgHeight = config?.height ?? 450;
+  const REFERENCE_WIDTH = 1600;
+  const scale = svgWidth / REFERENCE_WIDTH;
+  const titleHeight = title ? 48 * scale : 0;
 
   // Build lookup tables for custom colors per set/union
   const defaultTextColor = themeVariables.primaryTextColor ?? themeVariables.textColor;
@@ -48,8 +54,6 @@ export const draw: DrawDefinition = (
 
   // Prepare the target viewBox
   const svg = selectSvgElement(id);
-  const svgWidth = 1600;
-  const svgHeight = 900;
   svg.attr('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
 
   if (title) {
@@ -57,11 +61,11 @@ export const draw: DrawDefinition = (
       .append('text')
       .text(title)
       .attr('class', 'venn-title')
-      .attr('font-size', '32px')
+      .attr('font-size', `${32 * scale}px`)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'middle')
       .attr('x', '50%')
-      .attr('y', 32)
+      .attr('y', 32 * scale)
       .style('fill', themeVariables.vennTitleTextColor || themeVariables.titleColor);
   }
 
@@ -88,7 +92,7 @@ export const draw: DrawDefinition = (
   }
 
   if (textNodes.length > 0) {
-    renderTextNodes(config, layoutByKey, dummyD3root, textNodes);
+    renderTextNodes(config, layoutByKey, dummyD3root, textNodes, scale);
   }
 
   // Style the set circles with theme colors
@@ -102,17 +106,20 @@ export const draw: DrawDefinition = (
       .style('fill', baseColor)
       .style('fill-opacity', 0.1)
       .style('stroke', baseColor)
-      .style('stroke-width', 5)
+      .style('stroke-width', 5 * scale)
       .style('stroke-opacity', 0.95);
     // Blend border color toward black (light theme) or white (dark theme) for readable text
     const textColor: string = themeDark ? lighten(baseColor, 30) : darken(baseColor, 30);
-    group.select('text').style('font-size', '48px').style('fill', textColor);
+    group
+      .select('text')
+      .style('font-size', `${48 * scale}px`)
+      .style('fill', textColor);
   });
 
   // Style the union labels
   dummyD3root
     .selectAll('.venn-intersection text')
-    .style('font-size', '48px')
+    .style('font-size', `${48 * scale}px`)
     .style(
       'fill',
       (e) =>
@@ -144,7 +151,8 @@ function renderTextNodes(
   config: Required<VennDiagramConfig>,
   layoutByKey: Map<string, venn.IVennLayout<VennData>>,
   dummyD3root: DummyD3Root,
-  textNodes: VennTextData[]
+  textNodes: VennTextData[],
+  scale: number
 ) {
   const useDebugLayout = config?.useDebugLayout ?? false;
   const vennSvg = dummyD3root.select('svg');
@@ -184,7 +192,7 @@ function renderTextNodes(
     const areaGroup = textGroup
       .append('g')
       .attr('class', 'venn-text-area')
-      .attr('font-size', `40px`);
+      .attr('font-size', `${40 * scale}px`);
     if (useDebugLayout) {
       areaGroup
         .append('circle')
@@ -194,16 +202,16 @@ function renderTextNodes(
         .attr('r', innerRadius)
         .attr('fill', 'none')
         .attr('stroke', 'purple')
-        .attr('stroke-width', 1.5)
-        .attr('stroke-dasharray', '6 4');
+        .attr('stroke-width', 1.5 * scale)
+        .attr('stroke-dasharray', `${6 * scale} ${4 * scale}`);
     }
 
     // Compute a grid within the area for placing text nodes
-    const innerWidth = Math.max(80, innerRadius * 2 * 0.95);
-    const innerHeight = Math.max(60, innerRadius * 2 * 0.95);
+    const innerWidth = Math.max(80 * scale, innerRadius * 2 * 0.95);
+    const innerHeight = Math.max(60 * scale, innerRadius * 2 * 0.95);
     const hasLabel = area.data.label && area.data.label.length > 0;
-    const labelOffsetBase = hasLabel ? Math.min(32, innerRadius * 0.25) : 0;
-    const labelOffset = labelOffsetBase + (nodes.length <= 2 ? 30 : 0);
+    const labelOffsetBase = hasLabel ? Math.min(32 * scale, innerRadius * 0.25) : 0;
+    const labelOffset = labelOffsetBase + (nodes.length <= 2 ? 30 * scale : 0);
     const startX = centerX - innerWidth / 2;
     const startY = centerY - innerHeight / 2 + labelOffset;
     const cols = Math.max(1, Math.ceil(Math.sqrt(nodes.length)));
@@ -228,8 +236,8 @@ function renderTextNodes(
           .attr('height', cellHeight)
           .attr('fill', 'none')
           .attr('stroke', 'teal')
-          .attr('stroke-width', 1)
-          .attr('stroke-dasharray', '4 3');
+          .attr('stroke-width', 1 * scale)
+          .attr('stroke-dasharray', `${4 * scale} ${3 * scale}`);
       }
 
       const boxWidth = cellWidth * 0.9;
