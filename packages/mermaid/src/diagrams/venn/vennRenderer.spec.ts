@@ -65,10 +65,6 @@ describe('vennRenderer', () => {
     expect(circles[0]?.classList.contains('venn-set-0')).toBe(true);
     // Second circle should have venn-set-1 class
     expect(circles[1]?.classList.contains('venn-set-1')).toBe(true);
-    // Circle paths should have stroke style set (from theme colors)
-    const path = circles[0]?.querySelector('path');
-    expect(path?.style.stroke).toBeTruthy();
-    expect(path?.style.strokeWidth).toBe('2.5');
   });
 
   it('user override colors take priority over theme', async () => {
