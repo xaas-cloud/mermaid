@@ -110,7 +110,8 @@ export const draw: DrawDefinition = (
     const data = d as VennData;
     const setsKey = stableSetsKey([...data.sets].sort());
     const customStyle = styleByKey.get(setsKey);
-    const baseColor = customStyle?.fill || themeColors[i % themeColors.length] || themeVariables.primaryColor;
+    const baseColor =
+      customStyle?.fill || themeColors[i % themeColors.length] || themeVariables.primaryColor;
     group.classed(`venn-set-${i % 8}`, true);
     group
       .select('path')
@@ -120,7 +121,8 @@ export const draw: DrawDefinition = (
       .style('stroke-width', customStyle?.['stroke-width'] || `${5 * scale}`)
       .style('stroke-opacity', 0.95);
     // Blend border color toward black (light theme) or white (dark theme) for readable text
-    const textColor: string = customStyle?.color || (themeDark ? lighten(baseColor, 30) : darken(baseColor, 30));
+    const textColor: string =
+      customStyle?.color || (themeDark ? lighten(baseColor, 30) : darken(baseColor, 30));
     group
       .select('text')
       .style('font-size', `${48 * scale}px`)
@@ -131,16 +133,11 @@ export const draw: DrawDefinition = (
   dummyD3root
     .selectAll('.venn-intersection text')
     .style('font-size', `${48 * scale}px`)
-    .style(
-      'fill',
-      (e) => {
-        const data = e as VennData;
-        const setsKey = stableSetsKey([...data.sets].sort());
-        return styleByKey.get(setsKey)?.color ??
-          themeVariables.vennSetTextColor ??
-          defaultTextColor;
-      }
-    );
+    .style('fill', (e) => {
+      const data = e as VennData;
+      const setsKey = stableSetsKey([...data.sets].sort());
+      return styleByKey.get(setsKey)?.color ?? themeVariables.vennSetTextColor ?? defaultTextColor;
+    });
   dummyD3root
     .selectAll('.venn-intersection path')
     .style('fill-opacity', (e) => {

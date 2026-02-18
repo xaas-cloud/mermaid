@@ -252,5 +252,4 @@ describe('Venn diagram', function () {
       expect.objectContaining({ sets: ['Buz', 'Foo Bar'], size: 2.5 }),
     ]);
   });
-
 });

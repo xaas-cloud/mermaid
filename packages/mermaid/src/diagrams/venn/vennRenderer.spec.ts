@@ -77,9 +77,7 @@ describe('vennRenderer', () => {
         { sets: ['B'], size: 10, label: 'B' },
         { sets: ['A', 'B'], size: 2.5, label: 'AB' },
       ],
-      getStyleData: () => [
-        { targets: ['A', 'B'], styles: { color: '#00ff00', fill: 'gold' } },
-      ],
+      getStyleData: () => [{ targets: ['A', 'B'], styles: { color: '#00ff00', fill: 'gold' } }],
     });
 
     await draw('', 'venn', '1.0', diagram);
