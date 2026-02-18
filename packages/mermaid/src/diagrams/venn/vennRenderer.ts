@@ -5,11 +5,12 @@ import type { VennDiagramConfig } from '../../config.type.js';
 import type { Selection } from 'd3';
 import { select as d3select } from 'd3';
 // @ts-expect-error Incorrect khroma types
-import { isDark, lighten, darken } from 'khroma';
+import { isDark, lighten, darken, transparentize } from 'khroma';
 import { getConfig } from '../../config.js';
 import { selectSvgElement } from '../../rendering-util/selectSvgElement.js';
 import * as venn from '@upsetjs/venn.js';
 import { configureSvgSize } from '../../setupGraphViewbox.js';
+import rough from 'roughjs';
 
 type DummyD3Root = Selection<HTMLDivElement, unknown, null, undefined>;
 
@@ -35,7 +36,8 @@ export const draw: DrawDefinition = (
 ): void => {
   const db = diagObj.db as VennDB;
   const config = db.getConfig?.();
-  const { themeVariables } = getConfig();
+  const { themeVariables, look, handDrawnSeed } = getConfig();
+  const isHandDrawn = look === 'handDrawn';
   const themeColors: string[] = [
     themeVariables.venn1,
     themeVariables.venn2,
@@ -85,6 +87,10 @@ export const draw: DrawDefinition = (
     .height(svgHeight - titleHeight);
   dummyD3root.datum(sets).call(vennDiagram as never);
 
+  const roughSvg = isHandDrawn
+    ? rough.svg(dummyD3root.select('svg').node() as SVGSVGElement)
+    : undefined;
+
   // Compute layout areas so we can position additional text nodes
   const layoutAreas = venn.layout(sets, {
     width: svgWidth,
@@ -113,13 +119,37 @@ export const draw: DrawDefinition = (
     const baseColor =
       customStyle?.fill || themeColors[i % themeColors.length] || themeVariables.primaryColor;
     group.classed(`venn-set-${i % 8}`, true);
-    group
-      .select('path')
-      .style('fill', baseColor)
-      .style('fill-opacity', customStyle?.['fill-opacity'] ?? 0.1)
-      .style('stroke', customStyle?.stroke || baseColor)
-      .style('stroke-width', customStyle?.['stroke-width'] || `${5 * scale}`)
-      .style('stroke-opacity', 0.95);
+    const fillOpacity = customStyle?.['fill-opacity'] ?? 0.1;
+    const strokeColor = customStyle?.stroke || baseColor;
+    const strokeWidthVal = customStyle?.['stroke-width'] || `${5 * scale}`;
+
+    if (isHandDrawn && roughSvg) {
+      const layoutArea = layoutByKey.get(setsKey);
+      if (layoutArea && layoutArea.circles.length > 0) {
+        const c = layoutArea.circles[0];
+        const roughNode = roughSvg.circle(c.x, c.y, c.radius * 2, {
+          roughness: 0.7,
+          seed: handDrawnSeed,
+          fill: transparentize(baseColor, 0.7),
+          fillStyle: 'hachure',
+          fillWeight: 2,
+          hachureGap: 8,
+          hachureAngle: -41 + i * 60,
+          stroke: strokeColor,
+          strokeWidth: parseFloat(String(strokeWidthVal)),
+        });
+        group.select('path').remove();
+        group.node()?.insertBefore(roughNode, group.select('text').node() as Node | null);
+      }
+    } else {
+      group
+        .select('path')
+        .style('fill', baseColor)
+        .style('fill-opacity', fillOpacity)
+        .style('stroke', strokeColor)
+        .style('stroke-width', strokeWidthVal)
+        .style('stroke-opacity', 0.95);
+    }
     // Blend border color toward black (light theme) or white (dark theme) for readable text
     const textColor: string =
       customStyle?.color || (themeDark ? lighten(baseColor, 30) : darken(baseColor, 30));
@@ -130,26 +160,65 @@ export const draw: DrawDefinition = (
   });
 
   // Style the union labels
-  dummyD3root
-    .selectAll('.venn-intersection text')
-    .style('font-size', `${48 * scale}px`)
-    .style('fill', (e) => {
-      const data = e as VennData;
+  if (isHandDrawn && roughSvg) {
+    dummyD3root.selectAll('.venn-intersection').each(function (d) {
+      const group = d3select(this as Element);
+      const data = d as VennData;
       const setsKey = stableSetsKey([...data.sets].sort());
-      return styleByKey.get(setsKey)?.color ?? themeVariables.vennSetTextColor ?? defaultTextColor;
+      const customStyle = styleByKey.get(setsKey);
+      const customFill = customStyle?.fill;
+
+      if (customFill) {
+        const pathEl = group.select('path');
+        const pathD = pathEl.attr('d');
+        if (pathD) {
+          const roughNode = roughSvg.path(pathD, {
+            roughness: 0.7,
+            seed: handDrawnSeed,
+            fill: transparentize(customFill, 0.3),
+            fillStyle: 'cross-hatch',
+            fillWeight: 2,
+            hachureGap: 6,
+            hachureAngle: 60,
+            stroke: 'none',
+          });
+          const existingPath = pathEl.node() as Element | null;
+          existingPath?.parentNode?.insertBefore(roughNode, existingPath);
+          pathEl.remove();
+        }
+      } else {
+        group.select('path').style('fill-opacity', 0);
+      }
+
+      group
+        .select('text')
+        .style('font-size', `${48 * scale}px`)
+        .style('fill', customStyle?.color ?? themeVariables.vennSetTextColor ?? defaultTextColor);
     });
-  dummyD3root
-    .selectAll('.venn-intersection path')
-    .style('fill-opacity', (e) => {
-      const data = e as VennData;
-      const setsKey = stableSetsKey([...data.sets].sort());
-      return styleByKey.get(setsKey)?.fill ? 1 : 0;
-    })
-    .style('fill', (e) => {
-      const data = e as VennData;
-      const setsKey = stableSetsKey([...data.sets].sort());
-      return styleByKey.get(setsKey)?.fill ?? 'transparent';
-    });
+  } else {
+    dummyD3root
+      .selectAll('.venn-intersection text')
+      .style('font-size', `${48 * scale}px`)
+      .style('fill', (e) => {
+        const data = e as VennData;
+        const setsKey = stableSetsKey([...data.sets].sort());
+        return (
+          styleByKey.get(setsKey)?.color ?? themeVariables.vennSetTextColor ?? defaultTextColor
+        );
+      });
+    dummyD3root
+      .selectAll('.venn-intersection path')
+      .style('fill-opacity', (e) => {
+        const data = e as VennData;
+        const setsKey = stableSetsKey([...data.sets].sort());
+        return styleByKey.get(setsKey)?.fill ? 1 : 0;
+      })
+      .style('fill', (e) => {
+        const data = e as VennData;
+        const setsKey = stableSetsKey([...data.sets].sort());
+        return styleByKey.get(setsKey)?.fill ?? 'transparent';
+      });
+  }
 
   // Transfer the dummy SVG contents into the real SVG group
   const vennGroup = svg.append('g').attr('transform', `translate(0, ${titleHeight})`);

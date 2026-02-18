@@ -192,4 +192,49 @@ describe('Venn Diagram', () => {
       `
     );
   });
+
+  it('14: should render a two-set venn diagram with handDrawn look', () => {
+    imgSnapshotTest(
+      `venn-beta
+        set A
+        set B
+        union A, B
+      `,
+      { look: 'handDrawn', handDrawnSeed: 1, fontFamily: 'courier' }
+    );
+  });
+
+  it('15: should render a three-set venn with handDrawn look and title', () => {
+    imgSnapshotTest(
+      `venn-beta
+        title HandDrawn Skills
+        set Frontend
+        set Backend
+        set DevOps
+        union Frontend, Backend
+        union Backend, DevOps
+        union Frontend, DevOps
+        union Frontend, Backend, DevOps
+      `,
+      { look: 'handDrawn', handDrawnSeed: 1, fontFamily: 'courier' }
+    );
+  });
+
+  it('16: should render a handDrawn venn with custom styles and text nodes', () => {
+    imgSnapshotTest(
+      `venn-beta
+        set A
+          text "Item 1"
+          text "Item 2"
+        set B
+          text "Item 3"
+        union A, B
+          text "Shared"
+        style A fill:#ff6b6b
+        style B fill:#4ecdc4
+        style A,B fill:#ffe66d
+      `,
+      { look: 'handDrawn', handDrawnSeed: 1, fontFamily: 'courier' }
+    );
+  });
 });

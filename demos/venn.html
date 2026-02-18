@@ -168,6 +168,51 @@
         set Y["Engineering"]:15
         union X,Y["Product"]:5
       </pre>
+      <hr />
+      <pre class="mermaid">
+      %%{init: { 'look': 'handDrawn', 'handDrawnSeed': 1 } }%%
+      venn-beta
+        title Hand-drawn Three Sets
+        set Frontend
+        set Backend
+        set DevOps
+        union Frontend,Backend["Fullstack"]
+        union Backend,DevOps["Infra"]
+        union Frontend,DevOps["SRE"]
+        union Frontend,Backend,DevOps["All"]
+      </pre>
+      <hr />
+      <pre class="mermaid">
+      %%{init: { 'look': 'handDrawn', 'handDrawnSeed': 1 } }%%
+      venn-beta
+        title Hand-drawn with Styles &amp; Text Nodes
+        set A
+          text "Item 1"
+          text "Item 2"
+        set B
+          text "Item 3"
+        union A,B
+          text "Shared"
+        style A fill:#ff6b6b
+        style B fill:#4ecdc4
+        style A,B fill:#ffe66d
+      </pre>
+      <hr />
+      <div class="dark-sample">
+        <h2>Hand-drawn dark mode</h2>
+        <pre class="mermaid">
+        %%{init: { 'theme': 'dark', 'look': 'handDrawn', 'handDrawnSeed': 2 } }%%
+        venn-beta
+          title Sketchy Night Sets
+          set A["Frontend"]
+          set B["Backend"]
+          set C["Ops"]
+          union A,B["APIs"]
+          union B,C["Infra"]
+          union A,C["SRE"]
+          union A,B,C["Core"]
+        </pre>
+      </div>
     </div>
     <script type="module">
       import mermaid from '/mermaid.esm.mjs';
