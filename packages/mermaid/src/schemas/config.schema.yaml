@@ -1000,7 +1000,7 @@ $defs: # JSON Schema definition (maybe we should move these to a separate file)
   IshikawaDiagramConfig:
     title: Ishikawa Diagram Config
     allOf: [{ $ref: '#/$defs/BaseDiagramConfig' }]
-    description: The object containing configurations specific for kanban diagrams
+    description: The object containing configurations specific for ishikawa diagrams
     type: object
     properties:
       diagramPadding:

@@ -1094,7 +1094,7 @@ export interface MindmapDiagramConfig extends BaseDiagramConfig {
   layoutAlgorithm?: string;
 }
 /**
- * The object containing configurations specific for kanban diagrams
+ * The object containing configurations specific for ishikawa diagrams
  *
  * This interface was referenced by `MermaidConfig`'s JSON-Schema
  * via the `definition` "IshikawaDiagramConfig".
