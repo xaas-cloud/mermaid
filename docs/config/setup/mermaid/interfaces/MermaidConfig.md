@@ -479,6 +479,14 @@ Defined in: [packages/mermaid/src/config.type.ts:203](https://github.com/mermaid
 
 ---
 
+### venn?
+
+> `optional` **venn**: `VennDiagramConfig`
+
+Defined in: [packages/mermaid/src/config.type.ts:220](https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/config.type.ts#L220)
+
+---
+
 ### wrap?
 
 > `optional` **wrap**: `boolean`
