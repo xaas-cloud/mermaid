@@ -19,6 +19,7 @@ const MERMAID_CONFIG_DIAGRAM_KEYS = [
   'xyChart',
   'requirement',
   'mindmap',
+  'ishikawa',
   'kanban',
   'timeline',
   'gitGraph',
