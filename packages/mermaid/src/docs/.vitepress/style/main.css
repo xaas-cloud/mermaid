@@ -76,8 +76,13 @@ img.resizable-img {
   }
 }
 
-a.link-home {
+a.home-link {
   text-decoration: underline;
   color: var(--vp-c-brand-1);
-  font-size: larger;
+}
+
+.VPHomeHero .heading .name.clip.oss-home-name-clip {
+  --vp-home-hero-name-color: var(--vp-c-text-1);
+  --vp-home-hero-name-background: none;
+  color: var(--vp-c-text-1);
 }

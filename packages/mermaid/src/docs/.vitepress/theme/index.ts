@@ -6,6 +6,7 @@ import HomePage from '../components/HomePage.vue';
 import TopBar from '../components/TopBar.vue';
 import './custom.css';
 import Mermaid from './Mermaid.vue';
+import OssHomeHeroNameClipApplier from './OssHomeHeroNameClipApplier.js';
 import { getRedirect } from './redirect.js';
 import Tooltip from './Tooltip.vue';
 // @ts-ignore Type not available
@@ -21,6 +22,7 @@ export default {
     return h(Theme.Layout, null, {
       'home-features-after': () => h(HomePage),
       'home-hero-before': () => h(TopBar),
+      'home-hero-after': () => h(OssHomeHeroNameClipApplier),
       'doc-before': () => h(TopBar),
       'layout-bottom': () => h(Tooltip),
       'layout-top': () => h(EditorSelectionModal),
