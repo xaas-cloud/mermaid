@@ -53,3 +53,11 @@ vite.config.ts.timestamp-*
 
 # autogenereated by langium-cli
 generated/
+
+# Agent instruction files (synced from mermaid-ops via /sync, not committed here)
+/CLAUDE.md
+/AGENTS.md
+/assistant/
+/.claude/skills/
+packages/mermaid/src/diagrams/CLAUDE.md
+packages/parser/CLAUDE.md
