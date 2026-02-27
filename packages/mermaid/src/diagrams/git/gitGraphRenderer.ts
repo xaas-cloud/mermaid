@@ -657,14 +657,14 @@ const drawArrow = (
         // Source commit is on branch position left of destination commit
         // so render arrow rightward with colour of destination branch
 
-        lineDef = `M ${p1.x} ${p1.y} L ${lineX - radius} ${p1.y} ${arc2} ${lineX} ${p1.y - offset} L ${lineX} ${p2.y + radius} ${arc} ${lineX + offset} ${p2.y} L ${p2.x} ${p2.y}`;
+        lineDef = `M ${p1.x} ${p1.y} L ${lineX - radius} ${p1.y} ${arc} ${lineX} ${p1.y - offset} L ${lineX} ${p2.y + radius} ${arc2} ${lineX + offset} ${p2.y} L ${p2.x} ${p2.y}`;
       } else {
         // Source commit is on branch position right of destination commit
         // so render arrow leftward with colour of source branch
 
         colorClassNum = branchPos.get(commitA.branch)?.index;
 
-        lineDef = `M ${p1.x} ${p1.y} L ${lineX + radius} ${p1.y} ${arc} ${lineX} ${p1.y - offset} L ${lineX} ${p2.y + radius} ${arc2} ${lineX - offset} ${p2.y} L ${p2.x} ${p2.y}`;
+        lineDef = `M ${p1.x} ${p1.y} L ${lineX + radius} ${p1.y} ${arc2} ${lineX} ${p1.y - offset} L ${lineX} ${p2.y + radius} ${arc} ${lineX - offset} ${p2.y} L ${p2.x} ${p2.y}`;
       }
     } else {
       if (p1.y < p2.y) {
@@ -725,11 +725,11 @@ const drawArrow = (
     } else if (dir === 'BT') {
       if (p1.x < p2.x) {
         if (commitB.type === commitType.MERGE && commitA.id !== commitB.parents[0]) {
-          lineDef = `M ${p1.x} ${p1.y} L ${p1.x} ${p2.y + radius} ${arc} ${p1.x + offset} ${
+          lineDef = `M ${p1.x} ${p1.y} L ${p1.x} ${p2.y + radius} ${arc2} ${p1.x + offset} ${
             p2.y
           } L ${p2.x} ${p2.y}`;
         } else {
-          lineDef = `M ${p1.x} ${p1.y} L ${p2.x - radius} ${p1.y} ${arc2} ${p2.x} ${
+          lineDef = `M ${p1.x} ${p1.y} L ${p2.x - radius} ${p1.y} ${arc} ${p2.x} ${
             p1.y - offset
           } L ${p2.x} ${p2.y}`;
         }
@@ -741,7 +741,7 @@ const drawArrow = (
         offset = 20;
 
         if (commitB.type === commitType.MERGE && commitA.id !== commitB.parents[0]) {
-          lineDef = `M ${p1.x} ${p1.y} L ${p1.x} ${p2.y + radius} ${arc2} ${p1.x - offset} ${
+          lineDef = `M ${p1.x} ${p1.y} L ${p1.x} ${p2.y + radius} ${arc} ${p1.x - offset} ${
             p2.y
           } L ${p2.x} ${p2.y}`;
         } else {
