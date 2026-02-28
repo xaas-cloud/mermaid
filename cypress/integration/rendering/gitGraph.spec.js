@@ -1553,14 +1553,14 @@ gitGraph TB:
     it('76: should render a BT gitGraph with branch ordering and merge from right branch | Regression #6593', () => {
       imgSnapshotTest(
         `gitGraph BT:
-    commit
+    commit id: "A"
     branch develop order: 3
     checkout develop
-    commit
+    commit id: "B"
     branch release/1.0.0 order: 2
     checkout release/1.0.0
-    commit
-    commit
+    commit id: "C"
+    commit id: "D"
     checkout main
     merge release/1.0.0 tag: "v1.0.0"
     checkout develop`,
